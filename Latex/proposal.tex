@@ -29,10 +29,9 @@ Wheel-legged robots combine the energy efficiency of wheels with the adaptabilit
 therefore exhibit significant potential in applications requiring agility and terrain versatility.
 However, their inherently unstable structure introduces unique difficulties, especially under
 conditions of nonlinearities, uncertainties, and dynamic posture changes like height adjustments.
-In the context of balancing a wheel-legged robot, the primary challenge lies in achieving and
-maintaining stability.
+Modeling these can be a difficult problem which may take a lot of time and resources.
 
-We are especially interested in how this problem can be addressed by a machine learning approach.
+Therefore, we are interested in how this problem can be addressed by a machine learning approach.
 Our primary aim is to stabilize the robot in the standing equilibrium position by replacing the LQ
 regulator with a trained policy, thus circumventing the tedious design of a mathematical model.
 
@@ -52,14 +51,14 @@ Our plan to tackle this problem has four steps which will be described in the fo
         gravity.
 \end{enumerate}
 
-The setup of the simulation environment will probably utilize pybullet or gazebo as a simulation
+The setup of the simulation environment will probably utilize PyBullet or Gazebo as a simulation
 environment. Here an interface for controlling the bot and interacting with the simulation environment
 will be needed. On top of that an integration with Gymnasium, a popular reinforcement learning
-framework will be needed. This involves setting up a gym environment and implementing the necessary
+framework, has to be implemented. This involves setting up a gym environment and implementing the necessary
 feedback mechanisms for calculating the reward function.
 
-With the learning environment set up the next step is to define the geometry and capabilities of the
-bot, which can be found in the paper referenced above. With a basic reward function we can then try
+With the learning environment set up, the next step is to define the geometry and capabilities of the
+bot, which can be found in the paper referenced above. With a basic reward function we can then start
 to train a policy which is able to keep the robot upright, just like an inverted pendulum.
 
 After this baseline is established we will move forward to training a more general policy aiming for
