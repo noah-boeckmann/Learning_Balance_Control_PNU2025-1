@@ -25,18 +25,19 @@
 
 \maketitle
 \section{Problem Description}
-Wheel-legged robots combine the energy efficiency of wheels with the adaptability of legs and therefore exhibit significant potential in applications requiring agility and terrain versatility.
-However, their inherently unstable structure introduces unique difficulties, especially under conditions of nonlinearities, uncertainties, and dynamic posture changes like height adjustments.
-In the context of balancing a wheel-legged robot, the primary challenge lies in achieving and maintaining stability.
+Wheel-legged robots combine the energy efficiency of wheels with the adaptability of legs and
+therefore exhibit significant potential in applications requiring agility and terrain versatility.
+However, their inherently unstable structure introduces unique difficulties, especially under
+conditions of nonlinearities, uncertainties, and dynamic posture changes like height adjustments.
+In the context of balancing a wheel-legged robot, the primary challenge lies in achieving and
+maintaining stability.
 
-This problem is crucial as it directly impacts the robot's practical usability in real-world scenarios.
-Without effective balance control, the robot's ability to perform more complex tasks or navigate uneven terrain is compromised, limiting its application in industry.
-% Addressing these challenges can lead to breakthroughs in robotic control systems and unlock greater efficiency and functionality for wheel-legged robots.
+We are especially interested in how this problem can be addressed by a machine learning approach.
+Our primary aim is to stabilize the robot in the standing equilibrium position by replacing the LQ
+regulator with a trained policy, thus circumventing the tedious design of a mathematical model.
 
-We are especially interested in how effective this problem can be addressed by a machine learning approach, and to compare the outcome with the results presented in the original paper with the linear regulator.
-Our primary aim is to stabilize the robot in the standing equilibrium position by replacing the used LQR regulator. Additionally, we allow variations/uncertainty in the center of gravity and varying the robot height by changing the leg angle.
-If time permits, the implementation of a function for moving the robot would be conceivable.
-
+As a secondary goal we want to allow variations/uncertainty in the center of gravity and varying the
+robot height on the fly.
 
 \section{Relevant Work}
 
