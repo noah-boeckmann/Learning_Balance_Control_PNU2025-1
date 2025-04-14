@@ -1,5 +1,5 @@
 \documentclass[10pt, a4paper]{article}
-\usepackage[a4paper,left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage[a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -35,8 +35,7 @@ Therefore, we are interested in how this problem can be addressed by a machine l
 Our primary aim is to stabilize the robot in the standing equilibrium position by replacing the LQ
 regulator with a trained policy, thus circumventing the tedious design of a mathematical model.
 
-As a secondary goal we want to allow variations/uncertainty in the center of gravity and varying the
-robot height on the fly.
+As a secondary goal we want to allow variations/uncertainty in the center of gravity and varying the robot height on the fly.
 
 \section{Relevant Work}
 We directly base our project on the work done by S. Wang et al.,
@@ -49,35 +48,33 @@ In Mark Towers et al.,
 \hyperref{https://arxiv.org/abs/2407.17032}{}{}{``Gymnasium: A Standard Interface for Reinforcement
 Learning Environments''} the design and usage of Gymnasium is outlined.
 
-With regard to machine learning the collection of papers as recommended by OpenAI 
-\hyperref{https://spinningup.openai.com/en/latest/spinningup/keypapers.html}{}{}{``Key Papers in Deep RL''}
-have a plethora of information available on the topic
+Regarding the machine learning, the collection of reinfocement learning papers recommended by OpenAI 
+\hyperref{https://spinningup.openai.com/en/latest/spinningup/keypapers.html}{}{}{``Key Papers in Deep RL''},
+have a plethora of information available on the topic.
 
 \section{Research Plan}
-Our plan to tackle this problem has four steps which will be described in the following:
+Our plan to tackle this problem is divided into the four steps described in the following:
 \begin{enumerate}
   \item Setup of the simulation environment and integration with the machine learning framework.
-  \item Defining the geometry of the robot and training a proof of concept controller for a simple
-        and static robot state
-  \item Training a controller to keep the robot in its upright position while allowing for changing heights
-  \item Improving the controller further by introducing perturbations such as shifting the center of
-        gravity.
+  \item Definition of the robot geometry and training a proof of concept controller for a simple and static robot state.
+  \item Training a controller to balance the robot in its upright equilibrium position while allowing for changing height.
+  \item Improving the controller further by introducing perturbations such as shifting the center of gravity.
 \end{enumerate}
 
-The setup of the simulation environment will probably utilize PyBullet or Gazebo as a simulation
-environment. Here an interface for controlling the bot and interacting with the simulation environment
-will be needed. On top of that an integration with Gymnasium, a popular reinforcement learning
+The setup of the simulation environment will probably utilize \hyperref{https://pybullet.org/wordpress/}{}{}{PyBullet} or \hyperref{https://gazebosim.org/home}{}{}{Gazebo} as a simulation
+environment. Here, an interface for controlling the bot and interacting with the simulation environment
+will be needed. On top of that, an integration with Gymnasium, a popular reinforcement learning
 framework, has to be implemented. This involves setting up a gym environment and implementing the necessary
 feedback mechanisms for calculating the reward function.
 
 With the learning environment set up, the next step is to define the geometry and capabilities of the
-bot, which can be found in the paper referenced above. With a basic reward function we can then start
-to train a policy which is able to keep the robot upright, just like an inverted pendulum.
+bot, which can be found in the first paper referenced above. With a basic reward function we can then start
+to train a policy which is able to keep the robot upright, just like a cart pole.
 
 After this baseline is established we will move forward to training a more general policy aiming for
 stability in different height configurations of the robot.
 
-In the end we might be able to extend our goals and try to make the controller robust by training
+In the end we might be able to extend our goals and try to make the controller more robust by training
 the policy on a mildly randomized center of gravity and actively changing robot heights and possibly
 other features.
 \end{document}
