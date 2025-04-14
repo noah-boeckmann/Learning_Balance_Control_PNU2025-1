@@ -30,8 +30,30 @@
 \section{Relevant Work}
 
 \section{Research Plan}
+Our plan to tackle this problem has four steps which will be described in the following:
+\begin{enumerate}
+  \item Setup of the simulation environment and integration with the machine learning framework.
+  \item Defining the geometry of the robot and training a proof of concept controller for a simple
+        and static robot state
+  \item Training a controller to keep the robot in its upright position while allowing for changing heights
+  \item Improving the controller further by introducing perturbations such as shifting the center of
+        gravity.
+\end{enumerate}
 
+The setup of the simulation environment will probably utilize pybullet or gazebo as a simulation
+environment. Here an interface for controlling the bot and interacting with the simulation environment
+will be needed. On top of that an integration with Gymnasium, a popular reinforcement learning
+framework will be needed. This involves setting up a gym environment and implementing the necessary
+feedback mechanisms for calculating the reward function.
 
+With the learning environment set up the next step is to define the geometry and capabilities of the
+bot, which can be found in the paper referenced above. With a basic reward function we can then try
+to train a policy which is able to keep the robot upright, just like an inverted pendulum.
 
+After this baseline is established we will move forward to training a more general policy aiming for
+stability in different height configurations of the robot.
 
+In the end we might be able to extend our goals and try to make the controller robust by training
+the policy on a mildly randomized center of gravity and actively changing robot heights and possibly
+other features.
 \end{document}
