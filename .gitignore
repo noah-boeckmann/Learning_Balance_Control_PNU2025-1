@@ -30,6 +30,7 @@ fabric.properties
 #Temp
 #*.pdf
 *.bak
+*.FCBak
 *.sav
 *.aux
 *.fdb_latexmk
