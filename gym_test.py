@@ -1,5 +1,6 @@
 import math
 
+
 import gymnasium as gym  # open ai gym
 import time
 
@@ -11,6 +12,7 @@ def main():
     gym.register('WheelBot', robot_gym.WheelBotEnv)
 
     env = gym.make("WheelBot", xml_file="./bot_model/wheelbot_rigid.xml", reset_noise_scale=0.0, render_mode="human", frame_skip=1, width=1000, height=1000)
+    #env = gym.make("WheelBot", xml_file="./bot_model/wheelbot.xml", reset_noise_scale=0.0, render_mode="human", frame_skip=1, width=1000, height=1000)
     #env.render() # call this before env.reset, if you want a window showing the environment
 
     env.reset()  # should return a state vector if everything worked
@@ -18,7 +20,8 @@ def main():
 
     t = 0.0
 
-    a = []
+    #a_act = [0.872665, -0.872665,-0.872665, 0.872665, 0.01, 0.01]
+    a_rigid = [0.0, 0.0]
     while True:
         env.reset()
         for i in range(100):
@@ -26,8 +29,9 @@ def main():
             time.sleep(0.01)
 
         for i in range(100):
-            env.step(a)
-            time.sleep(0.05)
+            obs, rew, _, _, info = env.step(a_rigid)
+            print(info)
+            time.sleep(0.1)
 
     h_range = 0.5 * (1.5708 - 0.6980)
     while True:
