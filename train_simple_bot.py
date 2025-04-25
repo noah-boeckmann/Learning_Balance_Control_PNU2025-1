@@ -9,13 +9,13 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 gym.register('WheelBot', robot_gym.WheelBotEnv)
 
 
-def make_env(rank, seed=0, render_mode=None):
+def make_env(rank, seed=0, render_mode=None, frame_skip=1):
     def _init():
-        env = gym.make('WheelBot',
+        env = gym.make('WheelBot', max_episode_steps=3072,
                         xml_file="./bot_model/wheelbot_rigid.xml",
                         reset_noise_scale=0.0,
                         render_mode=render_mode,
-                        frame_skip=5, width=1000, height=1000)
+                        frame_skip=frame_skip, width=1000, height=1000)
         env.reset(seed=seed + rank)
         return env
     return _init
@@ -33,14 +33,14 @@ def main():
     env = VecMonitor(env)
 
     # Optional: save model checkpoints during training
-    checkpoint_callback = CheckpointCallback(save_freq=100000, save_path='./models/',
+    checkpoint_callback = CheckpointCallback(save_freq=31250, save_path='./models/',
                                              name_prefix='ppo_inverted_pendulum')
 
     # Create PPO model
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=2048)
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=1024)
 
     # Train the model
-    model.learn(total_timesteps=2_000_000, callback=checkpoint_callback)
+    model.learn(total_timesteps=5_000_000, callback=checkpoint_callback)
 
     # Save final model
     model.save("ppo_inverted_pendulum_final")

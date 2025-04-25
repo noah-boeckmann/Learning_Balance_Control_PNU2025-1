@@ -1,6 +1,8 @@
 dataset/
 
 train_log/
+ppo_logs/
+models/
 
 .idea/
 # IntelliJ

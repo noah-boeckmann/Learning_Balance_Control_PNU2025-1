@@ -13,16 +13,19 @@ def main():
                             reset_noise_scale=0.0,
                             render_mode="human",
                             frame_skip=1, width=1000, height=1000)])
-    model = PPO.load("ppo_inverted_pendulum_final.zip")
+    model = PPO.load("6MS_2.zip")
 
     while True:
         obs = env.reset()
         for _ in range(2048):
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
+            print(obs)
+            print(info)
             time.sleep(0.01)
             if done:
-                obs = env.reset()
+                while(True):
+                    env.render()
 
 if __name__ == '__main__':
     main()

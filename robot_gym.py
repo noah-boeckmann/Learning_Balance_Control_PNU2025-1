@@ -146,23 +146,31 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
+        z_angle = observation[5]
         y_angle = observation[4]
-        #dist_penalty = 0.01 * x**2 + y ** 2
-        dist_penalty = 0.0
-        angle_penalty = np.exp(0.1 * abs(y_angle)) + 1
+        dist_penalty = 1 * x**2 #+ 0.1 * y ** 2
+        #dist_penalty = 0.0
+        #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
+
+        y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
+        # z ist nicht im worldframe
+        z_angle_penalty = min(20, np.exp(0.1 * abs(z_angle)) - 1)
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - angle_penalty
+        reward = alive_bonus - dist_penalty - y_angle_penalty - z_angle_penalty
 
         reward_info = {
             "reward_survive": alive_bonus,
             "distance_penalty": -dist_penalty,
-            "angle_penalty": -angle_penalty,
+            "y_angle_penalty": -y_angle_penalty,
+            "z_angle_penalty": -z_angle_penalty,
         }
 
         return reward, reward_info
 
     def _get_obs(self):
+
+        #TODO: Speed?
         quat = self.data.xquat[1]  # [w, x, y, z]
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
