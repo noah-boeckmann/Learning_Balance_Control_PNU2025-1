@@ -98,10 +98,10 @@
   </equality>
 
   <actuator>
-    <position name="leg_1_l_1_m" joint="leg_1_l_1_h" ctrllimited="true" ctrlrange="-0.872665 0" kp="100" kv="0.1"/>
-    <position name="leg_1_l_2_m" joint="leg_1_l_2_h" ctrllimited="true" ctrlrange="0 0.872665" kp="100" kv="0.1"/>
-    <position name="leg_1_r_1_m" joint="leg_1_r_1_h" ctrllimited="true" ctrlrange="0 0.872665" kp="50" kv="0.1"/>
-    <position name="leg_1_r_2_m" joint="leg_1_r_2_h" ctrllimited="true" ctrlrange="-0.872665 0" kp="50" kv="0.1"/>
+    <position name="leg_1_l_1_m" joint="leg_1_l_1_h" ctrllimited="true" ctrlrange="-0.872665 0" kp="1000" kv="0.2"/>
+    <position name="leg_1_l_2_m" joint="leg_1_l_2_h" ctrllimited="true" ctrlrange="0 0.872665" kp="1000" kv="0.2"/>
+    <position name="leg_1_r_1_m" joint="leg_1_r_1_h" ctrllimited="true" ctrlrange="0 0.872665" kp="1000" kv="0.2"/>
+    <position name="leg_1_r_2_m" joint="leg_1_r_2_h" ctrllimited="true" ctrlrange="-0.872665 0" kp="1000" kv="0.2"/>
     <motor name="wheel_l_m" joint="wheel_l_h" ctrllimited="true" ctrlrange="-10 10"/>
     <motor name="wheel_r_m" joint="wheel_r_h" ctrllimited="true" ctrlrange="-10 10"/>
 
