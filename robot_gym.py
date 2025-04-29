@@ -99,7 +99,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         xml_file: str = "./bot_model/wheelbot.xml",
         frame_skip: int = 1,
         default_camera_config: Dict[str, Union[float, int]] = {},
-        healthy_reward: float = 10.0,
+        healthy_reward: float = 20.0,
         reset_noise_scale: float = 0.1,
         **kwargs,
     ):
@@ -108,7 +108,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._healthy_reward = healthy_reward
         self._reset_noise_scale = reset_noise_scale
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
 
         MujocoEnv.__init__(
             self,
@@ -148,37 +148,46 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x, y = observation[0], observation[1]
         z_angle = observation[5]
         y_angle = observation[4]
-        dist_penalty = 1 * x**2 #+ 0.1 * y ** 2
-        #dist_penalty = 0.0
-        #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
+        dist_penalty = 10 * x**2 #+ 0.1 * y ** 2
 
-        y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
-        # z ist nicht im worldframe
-        z_angle_penalty = min(20, np.exp(0.1 * abs(z_angle)) - 1)
+        #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
+        #y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
+        y_angle_penalty = 0.1 * (y_angle ** 2)
+
+        wheel_speed_l = observation[6]
+        wheel_speed_r = observation[7]
+
+        wheel_l_penalty = 0.5 * wheel_speed_l ** 2
+        wheel_r_penalty = 0.5 * wheel_speed_r ** 2
+
+        # FIXME: z is not measured in the worldframe - no issue when upright but should be looked into
+        z_angle_penalty = 0.1 * (z_angle ** 2)
+
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - y_angle_penalty - z_angle_penalty
+        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty
 
         reward_info = {
             "reward_survive": alive_bonus,
             "distance_penalty": -dist_penalty,
             "y_angle_penalty": -y_angle_penalty,
             "z_angle_penalty": -z_angle_penalty,
+            "wheel_l_penalty": -wheel_l_penalty,
+            "wheel_r_penalty": -wheel_r_penalty,
         }
 
         return reward, reward_info
 
     def _get_obs(self):
-
-        #TODO: Speed?
         quat = self.data.xquat[1]  # [w, x, y, z]
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
 
-        return np.concatenate([self.data.xpos[1],  # bot pos + angle
-                euler])
+        return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
+                euler, self.data.sensordata])
 
     def reset_model(self):
+        # TODO: reset model with appropriate noise, currently broken
         noise_low = -self._reset_noise_scale
         noise_high = self._reset_noise_scale
 
