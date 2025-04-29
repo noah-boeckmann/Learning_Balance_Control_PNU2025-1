@@ -13,19 +13,17 @@ def main():
                             reset_noise_scale=0.0,
                             render_mode="human",
                             frame_skip=1, width=1000, height=1000)])
-    model = PPO.load("6MS_2.zip")
+    model = PPO.load("models/4096_80k-rew.zip", device="cpu")
 
     while True:
         obs = env.reset()
-        for _ in range(2048):
+        for _ in range(4096):
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
-            print(obs)
             print(info)
             time.sleep(0.01)
             if done:
-                while(True):
-                    env.render()
-
+                time.sleep(1)
+                break
 if __name__ == '__main__':
     main()

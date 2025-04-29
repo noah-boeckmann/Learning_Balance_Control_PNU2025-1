@@ -11,7 +11,7 @@ gym.register('WheelBot', robot_gym.WheelBotEnv)
 
 def make_env(rank, seed=0, render_mode=None, frame_skip=1):
     def _init():
-        env = gym.make('WheelBot', max_episode_steps=3072,
+        env = gym.make('WheelBot', max_episode_steps=4096,
                         xml_file="./bot_model/wheelbot_rigid.xml",
                         reset_noise_scale=0.0,
                         render_mode=render_mode,
@@ -37,23 +37,13 @@ def main():
                                              name_prefix='ppo_inverted_pendulum')
 
     # Create PPO model
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=1024)
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=2048)
 
     # Train the model
-    model.learn(total_timesteps=5_000_000, callback=checkpoint_callback)
+    model.learn(total_timesteps=10_000_000, callback=checkpoint_callback)
 
     # Save final model
     model.save("ppo_inverted_pendulum_final")
-
-    # Evaluate
-    while True:
-        obs = env.reset()
-        for _ in range(2048):
-            action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
-            env.render()
-            if done:
-                obs = env.reset()
 
 
 if __name__ == '__main__':
