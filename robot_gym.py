@@ -189,18 +189,26 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 euler, self.data.sensordata])
 
     def reset_model(self):
+        # TODO: introduce an eval mode in which the angle can be set manually without RNG. Also useful for potential further perturbations
+        # TODO: introduce z angle noise?
+        # TODO: enable varying the height of the robot?
+
         noise_low = -self._reset_noise_scale
         noise_high = self._reset_noise_scale
 
         angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
-        quat = R.from_euler('y', angle, degrees=True)
+        angle = angle * np.pi / 180
+        quat = R.from_euler(seq="y", angles=angle, degrees=False).as_quat()
 
-        # we have to compensate for the height difference to always start touching the ground
-        z_height = np.cos(angle * np.pi / 180) * self._bot_height
+        # we have to compensate for the height difference so we always touch the ground at start
+        z_height = np.cos(angle) * self._bot_height
 
         state = self.init_qpos.copy()
         state[2] = z_height
-        state[3:7] = quat.as_quat()
+
+        # apparently mujoco denotes quaternions [w, x, y, z] instead of [x, y, z, w]
+        state[3] = quat[3]
+        state[4:7] = quat[:3]
 
         self.set_state(
             state,
