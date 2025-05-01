@@ -13,7 +13,7 @@ def make_env(rank, seed=0, render_mode=None, frame_skip=1):
     def _init():
         env = gym.make('WheelBot', max_episode_steps=4096,
                         xml_file="./bot_model/wheelbot_rigid.xml",
-                        reset_noise_scale=0.0,
+                        reset_noise_scale=0.5,
                         render_mode=render_mode,
                         frame_skip=frame_skip, width=1000, height=1000)
         env.reset(seed=seed + rank)
@@ -33,7 +33,7 @@ def main():
     env = VecMonitor(env)
 
     # Optional: save model checkpoints during training
-    checkpoint_callback = CheckpointCallback(save_freq=31250, save_path='./models/',
+    checkpoint_callback = CheckpointCallback(save_freq=31250, save_path='temp_models/',
                                              name_prefix='ppo_inverted_pendulum')
 
     # Create PPO model

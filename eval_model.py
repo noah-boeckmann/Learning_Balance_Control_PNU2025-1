@@ -13,7 +13,7 @@ def main():
                             reset_noise_scale=0.0,
                             render_mode="human",
                             frame_skip=1, width=1000, height=1000)])
-    model = PPO.load("models/4096_80k-rew.zip", device="cpu")
+    model = PPO.load("trained_models/4096_80k-rew.zip", device="cpu")
 
     while True:
         obs = env.reset()

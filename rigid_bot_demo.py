@@ -11,7 +11,7 @@ import robot_gym
 def main():
     gym.register('WheelBot', robot_gym.WheelBotEnv)
 
-    env = gym.make("WheelBot", xml_file="./bot_model/wheelbot_rigid.xml", reset_noise_scale=0.0, render_mode="human", frame_skip=1, width=1000, height=1000)
+    env = gym.make("WheelBot", xml_file="./bot_model/wheelbot_rigid.xml", reset_noise_scale=1, render_mode="human", frame_skip=1, width=1000, height=1000)
     #env = gym.make("WheelBot", xml_file="./bot_model/wheelbot.xml", reset_noise_scale=0.0, render_mode="human", frame_skip=1, width=1000, height=1000)
     #env.render() # call this before env.reset, if you want a window showing the environment
 

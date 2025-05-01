@@ -101,12 +101,14 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         default_camera_config: Dict[str, Union[float, int]] = {},
         healthy_reward: float = 20.0,
         reset_noise_scale: float = 0.1,
+        bot_height: float = 0.635,
         **kwargs,
     ):
         utils.EzPickle.__init__(self, xml_file, frame_skip, reset_noise_scale, **kwargs)
 
         self._healthy_reward = healthy_reward
         self._reset_noise_scale = reset_noise_scale
+        self._bot_height = bot_height
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
 
@@ -187,16 +189,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 euler, self.data.sensordata])
 
     def reset_model(self):
-        # TODO: reset model with appropriate noise, currently broken
         noise_low = -self._reset_noise_scale
         noise_high = self._reset_noise_scale
 
+        angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
+        quat = R.from_euler('y', angle, degrees=True)
+
+        # we have to compensate for the height difference to always start touching the ground
+        z_height = np.cos(angle * np.pi / 180) * self._bot_height
+
+        state = self.init_qpos.copy()
+        state[2] = z_height
+        state[3:7] = quat.as_quat()
+
         self.set_state(
-            self.init_qpos
-            + self.np_random.uniform(
-                low=noise_low, high=noise_high, size=self.model.nq
-            ),
-            self.init_qvel
-            + self.np_random.standard_normal(self.model.nv) * self._reset_noise_scale,
+            state,
+            self.init_qvel,
         )
         return self._get_obs()
