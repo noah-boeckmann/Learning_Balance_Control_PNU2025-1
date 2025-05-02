@@ -12,7 +12,6 @@ import argparse
 gym.register('WheelBot', robot_gym.WheelBotEnv)
 
 
-# Hyperparameters
 def parse_args():
     parser = argparse.ArgumentParser(description="Train PPO on WheelBot Environment")
 
