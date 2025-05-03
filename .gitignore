@@ -2,6 +2,7 @@ dataset/
 
 train_log/
 ppo_logs/
+tb_logs/
 temp_models/
 
 .idea/
