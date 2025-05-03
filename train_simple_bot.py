@@ -13,7 +13,7 @@ def make_env(rank, seed=0, render_mode=None, frame_skip=1):
     def _init():
         env = gym.make('WheelBot', max_episode_steps=4096,
                         xml_file="./bot_model/wheelbot_rigid.xml",
-                        reset_noise_scale=0.5,
+                        reset_noise_scale=0,
                         render_mode=render_mode,
                         frame_skip=frame_skip, width=1000, height=1000)
         env.reset(seed=seed + rank)
@@ -37,13 +37,13 @@ def main():
                                              name_prefix='ppo_inverted_pendulum')
 
     # Create PPO model
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=2048)
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./ppo_logs", device="cpu", n_steps=1024)
 
     # Train the model
     model.learn(total_timesteps=10_000_000, callback=checkpoint_callback)
 
     # Save final model
-    model.save("ppo_inverted_pendulum_final")
+    model.save("ppo_inverted_pendulum_basic")
 
 
 if __name__ == '__main__':

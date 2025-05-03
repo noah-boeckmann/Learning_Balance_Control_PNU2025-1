@@ -37,13 +37,13 @@ def main():
                                              name_prefix='ppo_inverted_pendulum')
 
     # Create PPO model
-    model = PPO.load("trained_models/basic_rigid_policy.zip", env=env, device="cpu", nsteps=2048)
+    model = PPO.load("ppo_inverted_pendulum_refined.zip", env=env, device="cpu", nsteps=2048)
 
     # Train the model
-    model.learn(total_timesteps=10_000_000, callback=checkpoint_callback)
+    model.learn(total_timesteps=20_000_000, callback=checkpoint_callback)
 
     # Save final model
-    model.save("ppo_inverted_pendulum_final")
+    model.save("ppo_inverted_pendulum_refined.zip")
 
 
 if __name__ == '__main__':
