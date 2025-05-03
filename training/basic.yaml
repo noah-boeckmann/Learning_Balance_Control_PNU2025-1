@@ -4,11 +4,13 @@ policy: MlpPolicy
 # Step settings
 n_steps: 2048
 max_ep_steps: 2048
+frame_skip: 1
+
 total_timesteps: 100_000
 save_interval: 50_000
 
 learning_rate: 0.0003
-frame_skip: 1
+
 
 # Reward setup
 healthy_reward: 20
@@ -19,4 +21,5 @@ wheel_speed_pen: 0.5
 
 # Curriculum learning
 difficulty_grad: 1.0
-reset_noise_scale: 0.05
+difficulty_start: 0.0
+reset_noise_scale: 2.0

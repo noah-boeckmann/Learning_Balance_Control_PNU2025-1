@@ -26,7 +26,7 @@ def parse_args():
 
     return parser.parse_args()
 
-def prepare_training(args : argparse.Namespace) -> dict:
+def prepare_training(args : argparse.Namespace):
     print("\n====================")
     print("Starting Training with Parameters:")
 
@@ -34,13 +34,13 @@ def prepare_training(args : argparse.Namespace) -> dict:
         print(f"{arg}: {value}")
 
     base_path = os.path.join(os.getcwd(), args.base_path)
+    file_path = os.path.join(base_path, args.train_name + '.yaml')
     config = None
     try:
-        path = os.path.join(base_path, args.train_name + '.yaml')
-        with open(path, 'r') as file:
+        with open(file_path, 'r') as file:
             config = yaml.safe_load(file)
     except FileNotFoundError:
-        print("The file " + str(path) + " does not exist, aborting!", file=sys.stderr)
+        print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
         exit(1)
 
     print("\nand hyperparameters from file:")
@@ -49,14 +49,20 @@ def prepare_training(args : argparse.Namespace) -> dict:
     print("====================\n")
     return base_path, config
 
-def make_env(rank, seed=0, render_mode=None, reset_noise_scale = 0.0, frame_skip=1):
+def make_env(rank, config:dict, seed=0, render_mode=None):
     def _init():
-        env = gym.make('WheelBot', max_episode_steps=4096,
+        env = gym.make('WheelBot', max_episode_steps=config["max_ep_steps"],
                         xml_file="./bot_model/wheelbot_rigid.xml",
-                        reset_noise_scale = reset_noise_scale,
-                        frame_skip=frame_skip,
                         render_mode=render_mode,
-                        width=1000, height=1000)
+                        width=1000, height=1000,
+                        healthy_reward = config['healthy_reward'],
+                        y_angle_pen = config['y_angle_pen'],
+                        z_angle_pen = config['z_angle_pen'],
+                        dist_pen = config['dist_pen'],
+                        wheel_speed_pen = config['wheel_speed_pen'],
+                        reset_noise_scale = config['reset_noise_scale'],
+                        difficulty_start = config['difficulty_start'],
+                        )
         env.reset(seed=seed + rank)
         return env
     return _init
@@ -66,6 +72,7 @@ def main():
     base_path, config = prepare_training(args)
 
     # Generate a folder for the training checkpoints
+    # TODO: implement periodic evaluation and saving of best policy
     checkpoint_path = os.path.join(base_path, args.train_name + "_checkpoints")
     os.makedirs(checkpoint_path, exist_ok=True)
 
@@ -77,9 +84,9 @@ def main():
 
     # Environment setup
     if args.num_envs == 1:
-        env = SubprocVecEnv([make_env(0, render_mode="human")])
+        env = SubprocVecEnv([make_env(0, config, render_mode="human")])
     else:
-        env = SubprocVecEnv([make_env(i) for i in range(args.num_envs)])
+        env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
     env = VecMonitor(env)
 
     # Create PPO model
@@ -89,7 +96,9 @@ def main():
         verbose=1,
         tensorboard_log=args.tensorboard_log,
         device=args.device,
-        n_steps=config["n_steps"]
+        n_steps=config["n_steps"],
+        learning_rate=config["learning_rate"],
+
     )
 
     # Train the model

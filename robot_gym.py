@@ -9,7 +9,7 @@ from gymnasium.spaces import Box
 
 
 DEFAULT_CAMERA_CONFIG = {
-    "trackbodyid": 0,
+    "trackbodyid": 1,
     "distance": 4.1225,
     "lookat": np.array((0.0, 0.0, 0.12250000000000005)),
 }
@@ -66,16 +66,28 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self,
         xml_file: str = "./bot_model/wheelbot.xml",
         frame_skip: int = 1,
+        bot_height: float = 0.635,
         default_camera_config: Dict[str, Union[float, int]] = {},
         healthy_reward: float = 20.0,
-        reset_noise_scale: float = 0.1,
-        bot_height: float = 0.635,
+        y_angle_pen: float = 0.1,
+        z_angle_pen: float = 0.1,
+        dist_pen: float = 100.0,
+        wheel_speed_pen: float = 0.5,
+        reset_noise_scale: float = 0.0,
+        difficulty_start: float = 0.0,
+
         **kwargs,
     ):
         utils.EzPickle.__init__(self, xml_file, frame_skip, reset_noise_scale, **kwargs)
 
         self._healthy_reward = healthy_reward
+        self._y_angle_pen = y_angle_pen
+        self._z_angle_pen = z_angle_pen
+        self._dist_pen = dist_pen
+        self._wheel_speed_pen = wheel_speed_pen
+
         self._reset_noise_scale = reset_noise_scale
+        self._difficulty = difficulty_start
         self._bot_height = bot_height
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
@@ -114,24 +126,27 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         # truncation=False as the time limit is handled by the `TimeLimit` wrapper added during `make`
         return observation, reward, terminated, False, info
 
+    def set_difficulty(self, difficulty):
+        self._difficulty = difficulty
+
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
         z_angle = observation[5]
         y_angle = observation[4]
-        dist_penalty = 100 * x**2 #+ 0.1 * y ** 2
+        dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
 
         #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
         #y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
-        y_angle_penalty = 0.1 * (y_angle ** 2)
+        y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
 
-        wheel_l_penalty = 0.5 * wheel_speed_l ** 2
-        wheel_r_penalty = 0.5 * wheel_speed_r ** 2
+        wheel_l_penalty = self._wheel_speed_pen * wheel_speed_l ** 2
+        wheel_r_penalty = self._wheel_speed_pen * wheel_speed_r ** 2
 
         # FIXME: z is not measured in the worldframe - no issue when upright but should be looked into
-        z_angle_penalty = 0.1 * (z_angle ** 2)
+        z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
@@ -161,8 +176,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         # TODO: introduce z angle noise?
         # TODO: enable varying the height of the robot?
 
-        noise_low = -self._reset_noise_scale
-        noise_high = self._reset_noise_scale
+        noise_low = -self._reset_noise_scale * self._difficulty
+        noise_high = self._reset_noise_scale * self._difficulty
 
         angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
         angle = angle * np.pi / 180
