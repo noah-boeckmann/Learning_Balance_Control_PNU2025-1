@@ -34,7 +34,7 @@
       <joint name="free_joint" type="free"/>
 
       <!-- Geometry for visualization -->
-      <geom type="box" density="604" size="0.14 0.2 0.065" rgba="0.8 0.3 0.3 1" contype="1" conaffinity="1"/>
+      <geom type="box" density="753" size="0.14 0.2 0.065" rgba="0.8 0.3 0.3 1" contype="1" conaffinity="1"/>
 
       <body name="leg_1_l_1" pos="0.07 0.2 0" euler="90 180 -40">
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="1"/>
@@ -46,7 +46,7 @@
 
           <body name="wheel_l" pos="0 -0.407 0.02">
             <joint type="hinge" name="wheel_l_h" axis="0 0 1"/>
-            <geom type="mesh" mesh="wheel" density="15" rgba="0.8 0.4 0.1 1" group="1"/>
+            <geom type="mesh" mesh="wheel" density="2388" rgba="0.8 0.4 0.1 1" group="1"/>
           </body>
         </body>
       </body>
@@ -72,7 +72,7 @@
 
           <body name="wheel_r" pos="0 -0.407 0.02">
             <joint type="hinge" name="wheel_r_h" axis="0 0 1"/>
-            <geom type="mesh" mesh="wheel" density="15" rgba="0.8 0.4 0.1 1" group="3"/>
+            <geom type="mesh" mesh="wheel" density="2388" rgba="0.8 0.4 0.1 1" group="3"/>
           </body>
         </body>
       </body>
@@ -95,8 +95,13 @@
   </equality>
 
   <actuator>
-    <motor name="wheel_l_m" joint="wheel_l_h" ctrllimited="true" ctrlrange="-10 10"/>
-    <motor name="wheel_r_m" joint="wheel_r_h" ctrllimited="true" ctrlrange="-10 10"/>
+    <motor name="wheel_l_m" joint="wheel_l_h" ctrllimited="false" ctrlrange="-1000 1000"/>
+    <motor name="wheel_r_m" joint="wheel_r_h" ctrllimited="false" ctrlrange="-1000 1000"/>
   </actuator>
+
+  <sensor>
+    <actuatorvel actuator="wheel_l_m"/>
+    <actuatorvel actuator="wheel_r_m"/>
+  </sensor>
 
 </mujoco>

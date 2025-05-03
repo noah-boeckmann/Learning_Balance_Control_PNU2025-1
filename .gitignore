@@ -2,7 +2,7 @@ dataset/
 
 train_log/
 ppo_logs/
-models/
+temp_models/
 
 .idea/
 # IntelliJ
@@ -46,6 +46,7 @@ fabric.properties
 *.run.xml
 *.toc
 *.tmp
+MUJOCO_LOG.TXT
 
 __pycache__/
 python/TestXPP/
