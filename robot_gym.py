@@ -17,71 +17,39 @@ DEFAULT_CAMERA_CONFIG = {
 
 class WheelBotEnv(MujocoEnv, utils.EzPickle):
     r"""
-    ## Description --- Taken from the gym mujoco reference implementation, subject to change!
     This environment takes the wheelbot model and makes it trainable.
 
 
     ## Action Space
     The agent take a 1-element vector for actions.
-    The action space is a continuous `(action)` in `[-1, 1]`, where `action` represents the
-    numerical torque applied to the cart (with magnitude representing the amount of force and
+    The action space is a continuous `(action)` in `[-1000, 1000]`, where `action` represents the
+    numerical torque applied to the robots wheels (with magnitude representing the amount of torque and
     sign representing the direction)
 
-    | Num | Action                    | Control Min | Control Max | Name (in corresponding XML file) | Type (Unit)|
-    |-----|---------------------------|-------------|-------------|----------------------------------|------------|
-    | 0   | Torque applied on the cart| -1          | 1           | wheel_r / wheel_l                | Torque Nm  |
+    | Num | Action                            | Control Min | Control Max | Name       | Type (Unit)|
+    |-----|-----------------------------------|-------------|-------------|------------|------------|
+    | 0   | Torque applied on the left wheel  | -1000       | 1000        | wheel_l_m  | Torque (Nm)|
+    | 1   | Torque applied on the right wheel | -1000       | 1000        | wheel_r_m  | Torque (Nm)|
 
 
     ## Observation Space
     The observation space consists of the following parts (in order):
 
-    - *qpos (1 element):* Position values of the robot's centerpoint
-    - *qvel (1 element):* Velocity values of the robot's centerpoint'
-    - *angle of the robot with regard to the world frame
-    - *angle velocity of the robot with regard to the world frame
-    - *leg_angle current angle of the legs
+    - Position values of the robot's centerpoint [3 Elements]
+    - Euler angle of the robot with regard to the world frame [3 Elements]
+    - Wheel turning velocities L & R [2 Elements]
 
-    The observation space is a `Box(-Inf, Inf, (9,), float64)` where the elements are as follows:
-    TODO:
-    | Num | Observation                                                       | Min  | Max | Name (in corresponding XML file) | Joint | Type (Unit)              |
-    | --- | ----------------------------------------------------------------- | ---- | --- | -------------------------------- | ----- | ------------------------ |
-    | 0   |                                                                   | -Inf | Inf |                                  |       | position (m)             |
-    | 1   |                                                                   | -Inf | Inf |                                  |       | unitless                 |
-    | 2   |                                                                   | -Inf | Inf |                                  |       | unitless                 |
-    | 3   |                                                                   | -Inf | Inf |                                  |       | unitless                 |
-    | 4   |                                                                   | -Inf | Inf |                                  |       | unitless                 |
-    | 5   |                                                                   | -Inf | Inf |                                  |       | velocity (m/s)           |
-
-
-
-    ## Rewards
-    The total reward is: ***reward*** *=* *alive_bonus - distance_penalty - velocity_penalty*.
-
-    - *alive_bonus*:
-    Every timestep that the robot is healthy, it gets a reward of fixed value `healthy_reward` (default is $10$).
-    - *distance_penalty*:
-    This reward is a measure of how far the robot has moved from the (0, 0, -) point in the world frame
-
-    - *velocity_penalty*:
-    A negative reward to penalize the agent for moving too fast.
-
-    `info` contains the individual reward terms.
-
-
-    ## Starting State
-
-    ## Episode End
-    ### Termination
-    The environment terminates when the Robot is unhealthy.
-    The Robot is unhealthy if any of the following happens:
-
-    1.Termination: The absolute angle of the robots center point with regard to the world frame is greater than 45 degrees.
-
-    ### Truncation
-    The default duration of an episode is 1000 timesteps.
-
-
-    ## Arguments
+    The observation space is a `Box(-Inf, Inf, (8,), float64)` where the elements are as follows:
+    | Num | Observation                                                       | Min  | Max | Type (Unit)               |
+    | --- | ----------------------------------------------------------------- | ---- | --- | ------------------------- |
+    | 0   | Bot X-Position                                                    | -Inf | Inf | position  (m)             |
+    | 1   | Bot Y-Position                                                    | -Inf | Inf | position  (m)             |
+    | 2   | Bot Z-Position                                                    | -Inf | Inf | position  (m)             |
+    | 3   | Bot X-Rotation                                                    | -Inf | Inf | angle     (deg)           |
+    | 4   | Bot Y-Rotation                                                    | -Inf | Inf | angle     (deg)           |
+    | 5   | Bot Z-Rotation                                                    | -Inf | Inf | angle     (deg)           |
+    | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
+    | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
 
     """
 
@@ -150,7 +118,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x, y = observation[0], observation[1]
         z_angle = observation[5]
         y_angle = observation[4]
-        dist_penalty = 10 * x**2 #+ 0.1 * y ** 2
+        dist_penalty = 100 * x**2 #+ 0.1 * y ** 2
 
         #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
         #y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
@@ -198,7 +166,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
         angle = angle * np.pi / 180
-        quat = R.from_euler(seq="y", angles=angle, degrees=False).as_quat()
+        quat = R.from_euler(seq="y", angles=angle).as_quat()
 
         # we have to compensate for the height difference so we always touch the ground at start
         z_height = np.cos(angle) * self._bot_height
