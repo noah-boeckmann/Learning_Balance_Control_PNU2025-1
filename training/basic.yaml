@@ -8,6 +8,8 @@ frame_skip: 1
 
 total_timesteps: 100_000
 save_interval: 50_000
+eval_freq: 25_000
+n_eval_ep: 10
 
 learning_rate: 0.0003
 

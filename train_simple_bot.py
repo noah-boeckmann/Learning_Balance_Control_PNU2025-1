@@ -9,8 +9,8 @@ import yaml
 import argparse
 
 from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor, DummyVecEnv
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
 
 def parse_args():
@@ -71,8 +71,18 @@ def main():
     args = parse_args()
     base_path, config = prepare_training(args)
 
+    # Environment setup
+    if args.num_envs == 1:
+        env = DummyVecEnv([make_env(0, config, render_mode="human")])
+    else:
+        env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
+    env = VecMonitor(env)
+
+    config["difficulty_start"] = 1.0
+    eval_env = DummyVecEnv([make_env(999, config)])
+    eval_env = VecMonitor(eval_env)
+
     # Generate a folder for the training checkpoints
-    # TODO: implement periodic evaluation and saving of best policy
     checkpoint_path = os.path.join(base_path, args.train_name + "_checkpoints")
     os.makedirs(checkpoint_path, exist_ok=True)
 
@@ -82,12 +92,15 @@ def main():
         name_prefix=args.train_name,
     )
 
-    # Environment setup
-    if args.num_envs == 1:
-        env = SubprocVecEnv([make_env(0, config, render_mode="human")])
-    else:
-        env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
-    env = VecMonitor(env)
+    eval_callback = EvalCallback(
+        eval_env,
+        eval_freq=max(config["eval_freq"] // args.num_envs, 1),
+        n_eval_episodes=config["n_eval_ep"],
+        log_path=checkpoint_path,
+        best_model_save_path=checkpoint_path,
+    )
+
+    callback = CallbackList([checkpoint_callback, eval_callback])
 
     # Create PPO model
     # TODO: Implement training continuation
@@ -99,12 +112,11 @@ def main():
         device=args.device,
         n_steps=config["n_steps"],
         learning_rate=config["learning_rate"],
-
     )
 
     try:
         # Train the model
-        model.learn(total_timesteps=config["total_timesteps"], callback=checkpoint_callback, tb_log_name=args.train_name)
+        model.learn(total_timesteps=config["total_timesteps"], callback=callback, tb_log_name=args.train_name)
     except KeyboardInterrupt:
         print("Training interrupted, exiting...")
 
