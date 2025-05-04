@@ -90,6 +90,7 @@ def main():
     env = VecMonitor(env)
 
     # Create PPO model
+    # TODO: Implement training continuation
     model = PPO(
         config["policy"],
         env,
@@ -101,8 +102,11 @@ def main():
 
     )
 
-    # Train the model
-    model.learn(total_timesteps=config["total_timesteps"], callback=checkpoint_callback, tb_log_name=args.train_name)
+    try:
+        # Train the model
+        model.learn(total_timesteps=config["total_timesteps"], callback=checkpoint_callback, tb_log_name=args.train_name)
+    except KeyboardInterrupt:
+        print("Training interrupted, exiting...")
 
     # Save final model
     save_path = os.path.join(base_path, args.train_name + ".zip")
