@@ -17,7 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train PPO on WheelBot Environment")
 
     # Add hyperparameters you want to control from command line
-    parser.add_argument('train_name', type=str, help="Name of the training, a YAML file with the given name has to exist!")
+    parser.add_argument('train_file', type=str, help="Path to YAML config file of the training")
     parser.add_argument('--cont_train', type=str, default=None, help="Path of the model to be worked on")
     parser.add_argument('--device', type=str, default="cpu", help="Device: cpu or cuda")
     parser.add_argument('--num_envs', type=int, default=1, help="Number of parallel environments")
@@ -33,8 +33,8 @@ def prepare_training(args : argparse.Namespace):
     for arg, value in vars(args).items():
         print(f"{arg}: {value}")
 
-    base_path = os.path.join(os.getcwd(), args.base_path)
-    file_path = os.path.join(base_path, args.train_name + '.yaml')
+    base_path = args.base_path if os.path.isabs(args.base_path) else os.path.join(os.getcwd(), args.base_path)
+    file_path = args.train_file
     config = None
     try:
         with open(file_path, 'r') as file:
@@ -43,11 +43,13 @@ def prepare_training(args : argparse.Namespace):
         print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
         exit(1)
 
+    train_name = file_path.split("/")[-1].split(".")[0]
+
     print("\nand hyperparameters from file:")
     print(config)
 
     print("====================\n")
-    return base_path, config
+    return train_name, base_path, config
 
 def make_env(rank, config:dict, seed=0, render_mode=None):
     def _init():
@@ -69,7 +71,7 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
 
 def main():
     args = parse_args()
-    base_path, config = prepare_training(args)
+    train_name, base_path, config = prepare_training(args)
 
     # Environment setup
     if args.num_envs == 1:
@@ -83,13 +85,13 @@ def main():
     eval_env = VecMonitor(eval_env)
 
     # Generate a folder for the training checkpoints
-    checkpoint_path = os.path.join(base_path, args.train_name + "_checkpoints")
+    checkpoint_path = os.path.join(base_path, train_name + "_checkpoints")
     os.makedirs(checkpoint_path, exist_ok=True)
 
     checkpoint_callback = CheckpointCallback(
         save_freq=max(config["save_interval"] // args.num_envs, 1),
         save_path=checkpoint_path,
-        name_prefix=args.train_name,
+        name_prefix=train_name,
     )
 
     eval_callback = EvalCallback(
@@ -116,12 +118,12 @@ def main():
 
     try:
         # Train the model
-        model.learn(total_timesteps=config["total_timesteps"], callback=callback, tb_log_name=args.train_name)
+        model.learn(total_timesteps=config["total_timesteps"], callback=callback, tb_log_name=train_name)
     except KeyboardInterrupt:
         print("Training interrupted, exiting...")
 
     # Save final model
-    save_path = os.path.join(base_path, args.train_name + ".zip")
+    save_path = os.path.join(base_path, train_name + ".zip")
     print("Saving final model to: " + save_path)
     model.save(save_path)
 
