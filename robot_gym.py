@@ -88,6 +88,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         self._reset_noise_scale = reset_noise_scale
         self._difficulty = difficulty_start
+        self._difficulty_start = difficulty_start
         self._bot_height = bot_height
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
@@ -127,7 +128,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         return observation, reward, terminated, False, info
 
     def set_difficulty(self, difficulty):
-        self._difficulty = difficulty
+        self._difficulty = max(self._difficulty_start, difficulty)
 
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]

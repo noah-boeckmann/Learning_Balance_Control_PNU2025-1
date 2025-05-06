@@ -1,5 +1,6 @@
 import gymnasium as gym
 import robot_gym
+from CurriculumCallback import CurriculumCallback
 
 gym.register('WheelBot', robot_gym.WheelBotEnv)
 
@@ -102,19 +103,34 @@ def main():
         best_model_save_path=checkpoint_path,
     )
 
-    callback = CallbackList([checkpoint_callback, eval_callback])
+    # Curriculum Learning
+    curriculum_callback = CurriculumCallback(env, config)
+
+    callback = CallbackList([checkpoint_callback, eval_callback, curriculum_callback])
 
     # Create PPO model
     # TODO: Implement training continuation
-    model = PPO(
-        config["policy"],
-        env,
-        verbose=1,
-        tensorboard_log=args.tensorboard_log,
-        device=args.device,
-        n_steps=config["n_steps"],
-        learning_rate=config["learning_rate"],
-    )
+    if args.cont_train is not None:
+        print("Continuing training with policy file " + args.cont_train)
+        model = PPO.load(args.cont_train,
+                         env=env,
+                         verbose=1,
+                         tensorboard_log=args.tensorboard_log,
+                         device=args.device,
+                         n_steps=config["n_steps"],
+                         learning_rate=config["learning_rate"],
+                         )
+    else:
+        print("Starting a fresh training")
+        model = PPO(
+            config["policy"],
+            env,
+            verbose=1,
+            tensorboard_log=args.tensorboard_log,
+            device=args.device,
+            n_steps=config["n_steps"],
+            learning_rate=config["learning_rate"],
+        )
 
     try:
         # Train the model
