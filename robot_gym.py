@@ -185,7 +185,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         quat = R.from_euler(seq="y", angles=angle).as_quat()
 
         # we have to compensate for the height difference so we always touch the ground at start
-        z_height = np.cos(angle) * self._bot_height
+        # take the distance to the middle of the wheel and add the wheels radius afterwards to account for the angle error
+        z_height = np.cos(angle) * (self._bot_height - 0.1) + 0.1
 
         state = self.init_qpos.copy()
         state[2] = z_height
