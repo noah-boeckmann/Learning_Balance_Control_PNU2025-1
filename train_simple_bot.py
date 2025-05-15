@@ -9,7 +9,7 @@ import sys
 import yaml
 import argparse
 
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor, DummyVecEnv
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
@@ -108,29 +108,46 @@ def main():
 
     callback = CallbackList([checkpoint_callback, eval_callback, curriculum_callback])
 
-    # Create PPO model
-    # TODO: Implement training continuation
+    # Create model
     if args.cont_train is not None:
-        print("Continuing training with policy file " + args.cont_train)
-        model = PPO.load(args.cont_train,
-                         env=env,
-                         verbose=1,
-                         tensorboard_log=args.tensorboard_log,
-                         device=args.device,
-                         n_steps=config["n_steps"],
-                         learning_rate=config["learning_rate"],
-                         )
+        print("Continuing " + config["algo"] + " training with policy file " + args.cont_train)
+        if config["algo"] == "PPO":
+            model = PPO.load(args.cont_train,
+                             env=env,
+                             verbose=1,
+                             tensorboard_log=args.tensorboard_log,
+                             device=args.device,
+                             n_steps=config["n_steps"],
+                             learning_rate=config["learning_rate"],
+                             )
+        elif config["algo"] == "SAC":
+            model = SAC.load(args.cont_train,
+                             env=env,
+                             verbose=0,
+                             tensorboard_log=args.tensorboard_log,
+                             device=args.device,
+                             learning_rate=config["learning_rate"],
+                             )
     else:
-        print("Starting a fresh training")
-        model = PPO(
-            config["policy"],
-            env,
-            verbose=1,
-            tensorboard_log=args.tensorboard_log,
-            device=args.device,
-            n_steps=config["n_steps"],
-            learning_rate=config["learning_rate"],
-        )
+        print("Starting a fresh " + config["algo"] + " training")
+        if config["algo"] == "PPO":
+            model = PPO(
+                config["policy"],
+                env,
+                verbose=1,
+                tensorboard_log=args.tensorboard_log,
+                device=args.device,
+                n_steps=config["n_steps"],
+                learning_rate=config["learning_rate"],
+            )
+        elif config["algo"] == "SAC":
+            model = SAC(config["policy"],
+                        env,
+                        verbose=0,
+                        tensorboard_log=args.tensorboard_log,
+                        device=args.device,
+                        learning_rate=config["learning_rate"],
+                        )
 
     try:
         # Train the model
