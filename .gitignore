@@ -2,7 +2,9 @@ dataset/
 
 train_log/
 ppo_logs/
+tb_logs/
 temp_models/
+*_checkpoints/
 
 .idea/
 # IntelliJ
