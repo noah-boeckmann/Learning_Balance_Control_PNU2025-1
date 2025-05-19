@@ -95,8 +95,8 @@
   </equality>
 
   <actuator>
-    <motor name="wheel_l_m" joint="wheel_l_h" ctrllimited="false" ctrlrange="-1000 1000"/>
-    <motor name="wheel_r_m" joint="wheel_r_h" ctrllimited="false" ctrlrange="-1000 1000"/>
+    <motor name="wheel_l_m" joint="wheel_l_h" ctrllimited="true" ctrlrange="-100 100"/>
+    <motor name="wheel_r_m" joint="wheel_r_h" ctrllimited="true" ctrlrange="-100 100"/>
   </actuator>
 
   <sensor>
