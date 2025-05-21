@@ -91,7 +91,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._difficulty_start = difficulty_start
         self._bot_height = bot_height
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(16,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
         MujocoEnv.__init__(
             self,
@@ -169,6 +169,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
+            "ang_penalty": -ang_penalty,
+            "vel_penalty": -vel_penalty,
         }
 
         return reward, reward_info
@@ -178,11 +180,17 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
 
-        x_vel = self.data.sensordata[self.model.sensor_refid[0]]
-        ang_vel_y = self.data.sensordata[self.model.sensor_refid[1]]  # Nimmt nur die y-Achsen-Winkelgeschwindigkeit
+     #   x_vel = self.data.sensordata[self.model.sensor_refid[3]]
+      #  ang_vel_y = self.data.sensordata[self.model.sensor_refid[2]]  # Nimmt nur die y-Achsen-Winkelgeschwindigkeit
+        wheel_sp_l = self.data.sensordata[0]
+        wheel_sp_r = self.data.sensordata[1]
+        x_vel = self.data.sensordata[7]
+        ang_vel_y = self.data.sensordata[6]
 
         return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, self.data.sensordata, x_vel.reshape(1), ang_vel_y.reshape(1)])
+                euler, wheel_sp_l.reshape(1), wheel_sp_r.reshape(1), x_vel.reshape(1), ang_vel_y.reshape(1)])
+
+
 
     def reset_model(self):
         # TODO: introduce an eval mode in which the angle can be set manually without RNG. Also useful for potential further perturbations
