@@ -134,6 +134,11 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x, y = observation[0], observation[1]
         z_angle = observation[5]
         y_angle = observation[4]
+
+        # Neue Sensorwerte abrufen
+        x_vel = observation[8]  # Geschwindigkeit in y-Richtung
+        ang_vel_y = observation[9]  # Winkelgeschwindigkeit um die x-Achse
+
         dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
 
         #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
@@ -141,8 +146,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
 
         #new sensors:
-        #vel_penalty = 1.5 * abs(x_vel)  # avoid too much movement in y
-        #ang_penalty = 0.5 * abs(ang_vel_y)  # avoid gier on x achsis
+        vel_penalty = 1.5 * abs(x_vel)  # avoid too much movement in y
+        ang_penalty = 0.5 * abs(ang_vel_y)  # avoid gier on x achsis
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
@@ -155,7 +160,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty
+        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty - vel_penalty - ang_penalty
 
         reward_info = {
             "reward_survive": alive_bonus,
