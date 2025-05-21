@@ -7,12 +7,12 @@ n_steps: 2048
 max_ep_steps: 2048
 frame_skip: 1
 
-total_timesteps: 100_000
-save_interval: 50_000
-eval_freq: 25_000
+total_timesteps: 10_000_000
+save_interval: 500_000
+eval_freq: 250_000
 n_eval_ep: 10
 
-learning_rate: 0.0003
+learning_rate: 0.0003  # prev 0.0003 i think
 
 
 # Reward setup
@@ -20,14 +20,15 @@ healthy_reward: 20
 y_angle_pen: 0.1
 z_angle_pen: 0.1
 dist_pen: 100.0
-wheel_speed_pen: 0.5
+wheel_speed_pen: 0.2  # prev 0.5
+# add box speed penalty
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
 
-difficulty_schedule: "lin"  # grad * (x + x_offset)
-# difficulty_schedule: "exp"  # exp(grad * x + x_offset)
-# difficulty_schedule: "cub"  # grad * (x + x_offset)^3
-# difficulty_schedule: "sig"  # 1 / (1 + e^(-grad * (x + x_offset)))
+#difficulty_schedule: "lin"  # grad * (x + x_offset)
+#difficulty_schedule: "exp"  # exp(grad * x + x_offset)
+#difficulty_schedule: "cub"  # grad * (x + x_offset)^3
+difficulty_schedule: "sig"  # 1 / (1 + e^(-grad * (x + x_offset)))
 difficulty_grad: 2.0
 difficulty_x_offset: -0.2
 difficulty_start: 0.0
