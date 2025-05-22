@@ -107,4 +107,9 @@
 
   </actuator>
 
+  <sensor>
+    <actuatorvel actuator="wheel_l_m"/>
+    <actuatorvel actuator="wheel_r_m"/>
+  </sensor>
+
 </mujoco>
