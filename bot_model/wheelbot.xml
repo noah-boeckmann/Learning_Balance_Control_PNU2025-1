@@ -1,18 +1,3 @@
-<!-- Cartpole Model - Here for reference only, this file has been heavily modified
-
-    The state space is populated with joints in the order that they are
-    defined in this file. The actuators also operate on joints.
-
-    State-Space (name/joint/parameter):
-        - cart      slider      position (m)
-        - pole      hinge       angle (rad)
-        - cart      slider      velocity (m/s)
-        - pole      hinge       angular velocity (rad/s)
-
-    Actuators (name/actuator/parameter):
-        - cart      motor       force x (N)
-
--->
 <mujoco model="wheelbot">
   <compiler coordinate="local" inertiafromgeom="true"/>
 
@@ -37,10 +22,10 @@
       <geom type="box" density="753" size="0.14 0.2 0.065" rgba="0.8 0.3 0.3 1" contype="1" conaffinity="1"/>
 
       <body name="leg_1_l_1" pos="0.07 0.2 0" euler="90 180 -40">
-        <joint type="hinge" name="leg_1_l_1_h" axis="0 0 1" limited="true" range="-50 0"/>
+        <joint type="hinge" name="leg_1_l_1_h" axis="0 0 1" limited="true" range="-50 0" armature="0.1"/>
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="1"/>
 
-        <body name="leg_2_l_1" pos="0 -0.28 0" euler="0 0 78">
+        <body name="leg_2_l_1" pos="0 -0.28 0">
           <joint type="hinge" axis="0 0 1"/>
           <geom type="mesh" mesh="leg_2" density="1" rgba="0.8 0.4 0.1 1" group="1"/>
           <site name="leg_2_l_1_s" pos="0 -0.407 0"/>
@@ -53,10 +38,10 @@
       </body>
 
       <body name="leg_1_l_2" pos="-0.07 0.2 0" euler="90 180 40">
-        <joint type="hinge" name="leg_1_l_2_h" axis="0 0 1" limited="true" range="0 50"/>
+        <joint type="hinge" name="leg_1_l_2_h" axis="0 0 1" limited="true" range="0 50" armature="0.1"/>
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="2"/>
 
-        <body name="leg_2_l_2" pos="0 -0.28 0" euler="0 0 -78">
+        <body name="leg_2_l_2" pos="0 -0.28 0">
           <joint type="hinge" axis="0 0 1"/>
           <geom type="mesh" mesh="leg_2" density="1" rgba="0.8 0.4 0.1 1" group="2"/>
           <site name="leg_2_l_2_s" pos="0 -0.407 0"/>
@@ -64,10 +49,10 @@
       </body>
 
       <body name="leg_1_r_1" pos="0.07 -0.2 0" euler="90 0 40">
-        <joint type="hinge" name="leg_1_r_1_h" axis="0 0 1" limited="true" range="0 50"/>
+        <joint type="hinge" name="leg_1_r_1_h" axis="0 0 1" limited="true" range="0 50" armature="0.1"/>
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="3"/>
 
-        <body name="leg_2_r_1" pos="0 -0.28 0" euler="0 0 -78">
+        <body name="leg_2_r_1" pos="0 -0.28 0">
           <joint type="hinge" axis="0 0 1"/>
           <geom type="mesh" mesh="leg_2" density="1" rgba="0.8 0.4 0.1 1" group="3"/>
           <site name="leg_2_r_1_s" pos="0 -0.407 0"/>
@@ -80,10 +65,10 @@
       </body>
 
       <body name="leg_1_r_2" pos="-0.07 -0.2 0" euler="90 0 -40">
-        <joint type="hinge" name="leg_1_r_2_h" axis="0 0 1" limited="true" range="-50 0"/>
+        <joint type="hinge" name="leg_1_r_2_h" axis="0 0 1" limited="true" range="-50 0" armature="0.1"/>
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="4"/>
 
-        <body name="leg_2_r_2" pos="0 -0.28 0" euler="0 0 78">
+        <body name="leg_2_r_2" pos="0 -0.28 0">
           <joint type="hinge" axis="0 0 1"/>
           <geom type="mesh" mesh="leg_2" density="1" rgba="0.8 0.4 0.1 1" group="4"/>
           <site name="leg_2_r_2_s" pos="0 -0.407 0"/>
