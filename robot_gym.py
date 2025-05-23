@@ -50,6 +50,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 5   | Bot Z-Rotation                                                    | -Inf | Inf | angle     (deg)           |
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
+    | 8   | Velocity of box in X                                               | -Inf | Inf | vel (m/s)                |
+    | 9   | Angle velocity of box around y-achsis                             | -Inf | Inf | angle vel (deg in rad)    |
 
     """
 
@@ -146,8 +148,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
 
         #new sensors:
-        vel_penalty = 1.5 * abs(x_vel)  # avoid too much movement in y
-        ang_penalty = 0.5 * abs(ang_vel_y)  # avoid gier on x achsis
+        vel_penalty = 1.0 * abs(x_vel) ** 2  # avoid too much movement in y
+        ang_penalty = 0.5 * abs(ang_vel_y) **2  # avoid gier on x achsis
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
