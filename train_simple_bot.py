@@ -65,6 +65,8 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
                         wheel_speed_pen = config['wheel_speed_pen'],
                         reset_noise_scale = config['reset_noise_scale'],
                         difficulty_start = config['difficulty_start'],
+                        x_vel_pen=config['x_vel_pen'],
+                        y_angle_vel_pen=config['y_angle_vel_pen'],
                         )
         env.reset(seed=seed + rank)
         return env
