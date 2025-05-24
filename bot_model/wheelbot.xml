@@ -20,6 +20,7 @@
 
       <!-- Geometry for visualization -->
       <geom type="box" density="753" size="0.14 0.2 0.065" rgba="0.8 0.3 0.3 1" contype="1" conaffinity="1"/>
+      <site name="boxsens" pos="0 0 0"/>
 
       <body name="leg_1_l_1" pos="0.07 0.2 0" euler="90 180 -40">
         <joint type="hinge" name="leg_1_l_1_h" axis="0 0 1" limited="true" range="-50 0" armature="1.0"/>
@@ -95,6 +96,10 @@
   <sensor>
     <actuatorvel actuator="wheel_l_m"/>
     <actuatorvel actuator="wheel_r_m"/>
+    <!-- angle velocity around y-->
+    <frameangvel name="body_y_ang_vel" objtype="body" objname="base"/>
+    <!-- velocity in x-->
+    <velocimeter name="body_x_vel" site="boxsens"/>
   </sensor>
 
 </mujoco>

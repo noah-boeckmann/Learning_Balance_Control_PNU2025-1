@@ -75,7 +75,6 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         wheel_speed_pen: float = 0.5,
         x_vel_pen: float = 1.0,
         y_angle_vel_pen: float = 0.5,
-
         max_angle: float = 0.0,
         rigid: bool = False,
         height_level: float = 1.0,
