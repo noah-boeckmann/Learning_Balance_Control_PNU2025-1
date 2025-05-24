@@ -130,6 +130,11 @@ def main():
                              device=args.device,
                              learning_rate=config["learning_rate"],
                              )
+        else:
+            print("The algo " + config["algo"] + "does not exist, aborting!", file=sys.stderr)
+            env.close()
+            eval_env.close()
+            exit(1)
     else:
         print("Starting a fresh " + config["algo"] + " training")
         if config["algo"] == "PPO":
