@@ -14,7 +14,6 @@ DEFAULT_CAMERA_CONFIG = {
     "lookat": np.array((0.0, 0.0, 0.12250000000000005)),
 }
 
-
 class WheelBotEnv(MujocoEnv, utils.EzPickle):
     r"""
     This environment takes the wheelbot model and makes it trainable.
@@ -66,19 +65,23 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self,
         xml_file: str = "./bot_model/wheelbot.xml",
         frame_skip: int = 1,
-        bot_height: float = 0.635,
         default_camera_config: Dict[str, Union[float, int]] = {},
         healthy_reward: float = 20.0,
         y_angle_pen: float = 0.1,
         z_angle_pen: float = 0.1,
         dist_pen: float = 100.0,
         wheel_speed_pen: float = 0.5,
-        reset_noise_scale: float = 0.0,
+
+        max_angle: float = 0.0,
+        rigid: bool = False,
+        height_level: float = 1.0,
         difficulty_start: float = 0.0,
+        eval: bool = False,
+
 
         **kwargs,
     ):
-        utils.EzPickle.__init__(self, xml_file, frame_skip, reset_noise_scale, **kwargs)
+        utils.EzPickle.__init__(self, xml_file, frame_skip, max_angle, **kwargs)
 
         self._healthy_reward = healthy_reward
         self._y_angle_pen = y_angle_pen
@@ -86,10 +89,16 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._dist_pen = dist_pen
         self._wheel_speed_pen = wheel_speed_pen
 
-        self._reset_noise_scale = reset_noise_scale
+        self._max_angle = max_angle
         self._difficulty = difficulty_start
         self._difficulty_start = difficulty_start
-        self._bot_height = bot_height
+
+        self._bot_height = None # Will be calculated in reset
+        self._height_actor_max = 0.872665
+        self._rigid = rigid
+        self.set_height_level(height_level)
+
+        self._eval = eval
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
 
@@ -102,6 +111,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             **kwargs,
         )
 
+        self.action_space = Box(low=-100, high=100, shape=(2,), dtype=np.float32)
+
         self.metadata = {
             "render_modes": [
                 "human",
@@ -113,6 +124,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         }
 
     def step(self, action):
+
+        action = np.concatenate([self._height_actor_action, action], axis=0)
         self.do_simulation(action, self.frame_skip)
 
         observation = self._get_obs()
@@ -129,6 +142,14 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     def set_difficulty(self, difficulty):
         self._difficulty = max(self._difficulty_start, difficulty)
+
+    def set_height_level(self, height_level):
+        self._height_level = height_level
+        actor_angle = self._height_actor_max * (1 - self._height_level)
+        self._height_actor_action = [-actor_angle, actor_angle, actor_angle, -actor_angle]
+
+    def set_max_angle(self, angle):
+        self._max_angle = angle
 
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
@@ -173,14 +194,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 euler, self.data.sensordata])
 
     def reset_model(self):
-        # TODO: introduce an eval mode in which the angle can be set manually without RNG. Also useful for potential further perturbations
         # TODO: introduce z angle noise?
-        # TODO: enable varying the height of the robot?
 
-        noise_low = -self._reset_noise_scale * self._difficulty
-        noise_high = self._reset_noise_scale * self._difficulty
+        if self._eval:
+            angle = self._max_angle
 
-        angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
+        else:
+            # generate a random starting angle
+            angle_low = -self._max_angle * self._difficulty
+            angle_high = self._max_angle * self._difficulty
+            angle = self.np_random.uniform(angle_low, angle_high)
+
+            # set a random height level if not rigid
+            if not self._rigid: self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+
+        self._bot_height, beta = self.calculate_reset_hinge_angles()
         angle = angle * np.pi / 180
         quat = R.from_euler(seq="y", angles=angle).as_quat()
 
@@ -195,8 +223,31 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         state[3] = quat[3]
         state[4:7] = quat[:3]
 
+        # set the angle actor initial angles
+        state[7], state[10], state[12], state[15] = self._height_actor_action
+        self.data.ctrl = np.concatenate([self._height_actor_action, [0.0, 0.0]])
+
+        # set the second leg hinges to their appropriate angles to avoid excessive movement at simulation start
+        state[8] = beta
+        state[11] = -beta
+        state[13] = -beta
+        state[16] = beta
+
         self.set_state(
             state,
             self.init_qvel,
         )
         return self._get_obs()
+
+    def calculate_reset_hinge_angles(self):
+        actor_angle = self._height_actor_action[1] # Take the positive height actor angle
+
+        alpha = actor_angle + 0.698132 # add angle offset of joint
+        a = np.cos(alpha) * 0.28 # Length of the first leg part triangle
+        b = np.sqrt(0.165649 - (np.sin(alpha) * 0.28 + 0.07) ** 2) # Length of the second leg part triangle
+        height = a + b # Bot height from box frame to wheel hub
+        beta = alpha + np.arccos(b / 0.407) # Angle from leg part 1 to leg part 2
+
+        height = height + 0.1 # add wheel height
+
+        return height, beta

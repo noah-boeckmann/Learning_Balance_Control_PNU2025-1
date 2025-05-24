@@ -1,10 +1,8 @@
 import gymnasium as gym
 import robot_gym
-import robot_gym_height
 from CurriculumCallback import CurriculumCallback
 
-gym.register('WheelBotSimple', robot_gym.WheelBotEnv)
-gym.register('WheelBot', robot_gym_height.WheelBotEnv)
+gym.register('WheelBot', robot_gym.WheelBotEnv)
 
 import os
 import sys
@@ -20,7 +18,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train PPO on WheelBot Environment")
 
     # Add hyperparameters you want to control from command line
-    parser.add_argument('type', type=str, choices=["simple", "complex"])
     parser.add_argument('train_file', type=str, help="Path to YAML config file of the training")
     parser.add_argument('--cont_train', type=str, default=None, help="Path of the model to be worked on")
     parser.add_argument('--device', type=str, default="cpu", help="Device: cpu or cuda")
@@ -55,7 +52,7 @@ def prepare_training(args : argparse.Namespace):
     print("====================\n")
     return train_name, base_path, config
 
-def make_height_env(rank, config:dict, seed=0, render_mode=None):
+def make_env(rank, config:dict, seed=0, render_mode=None):
     def _init():
         env = gym.make('WheelBot', max_episode_steps=config["max_ep_steps"],
                         xml_file="./bot_model/wheelbot.xml",
@@ -66,25 +63,9 @@ def make_height_env(rank, config:dict, seed=0, render_mode=None):
                         z_angle_pen = config['z_angle_pen'],
                         dist_pen = config['dist_pen'],
                         wheel_speed_pen = config['wheel_speed_pen'],
-                        max_angle = config['reset_noise_scale'],
-                        difficulty_start = config['difficulty_start'],
-                        )
-        env.reset(seed=seed + rank)
-        return env
-    return _init
-
-def make_simple_env(rank, config:dict, seed=0, render_mode=None):
-    def _init():
-        env = gym.make('WheelBotSimple', max_episode_steps=config["max_ep_steps"],
-                        xml_file="./bot_model/wheelbot_rigid.xml",
-                        render_mode=render_mode,
-                        width=1000, height=1000,
-                        healthy_reward = config['healthy_reward'],
-                        y_angle_pen = config['y_angle_pen'],
-                        z_angle_pen = config['z_angle_pen'],
-                        dist_pen = config['dist_pen'],
-                        wheel_speed_pen = config['wheel_speed_pen'],
-                        reset_noise_scale = config['reset_noise_scale'],
+                        max_angle = config['max_angle'],
+                        rigid = config['rigid'],
+                        height_level = config['height_level'],
                         difficulty_start = config['difficulty_start'],
                         )
         env.reset(seed=seed + rank)
@@ -95,8 +76,6 @@ def main():
     args = parse_args()
     train_name, base_path, config = prepare_training(args)
 
-    make_env = make_simple_env if args.type == "simple" else make_height_env
-
     # Environment setup
     if args.num_envs == 1:
         env = DummyVecEnv([make_env(0, config, render_mode="human")])
@@ -104,7 +83,7 @@ def main():
         env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
     env = VecMonitor(env)
 
-    config["difficulty_start"] = 1.0
+    config["eval"] = True
     eval_env = DummyVecEnv([make_env(999, config)])
     eval_env = VecMonitor(eval_env)
 
