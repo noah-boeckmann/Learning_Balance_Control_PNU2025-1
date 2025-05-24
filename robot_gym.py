@@ -50,8 +50,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 5   | Bot Z-Rotation                                                    | -Inf | Inf | angle     (deg)           |
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
-    | 8   | Velocity of box in X                                               | -Inf | Inf | vel (m/s)                |
-    | 9   | Angle velocity of box around y-achsis                             | -Inf | Inf | angle vel (deg in rad)    |
+    | 8   | Velocity of box in X                                              | -Inf | Inf | vel (m/s)                 |
+    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)    |
 
     """
 
@@ -134,22 +134,19 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
-        z_angle = observation[5]
         y_angle = observation[4]
+        z_angle = observation[5]
 
-        # Neue Sensorwerte abrufen
-        x_vel = observation[8]  # Geschwindigkeit in y-Richtung
-        ang_vel_y = observation[9]  # Winkelgeschwindigkeit um die x-Achse
+        # x speed and y angle speed sensors:
+        x_vel = observation[8]  # Velocity in x-axis direction
+        y_angle_vel = observation[9]  # Angular velocity around the y-axis
 
         dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
-
-        #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
-        #y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
 
-        #new sensors:
-        vel_penalty = 1.0 * abs(x_vel) ** 2  # avoid too much movement in y
-        ang_penalty = 0.5 * abs(ang_vel_y) **2  # avoid gier on x achsis
+        # X velocity and y angle velocity penalties:
+        x_vel_penalty = 1.0 * x_vel ** 2  # avoid too much movement in y
+        y_angle_vel_penalty = 0.5 * y_angle_vel ** 2  # avoid gier on x achsis
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
@@ -162,7 +159,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty - vel_penalty - ang_penalty
+        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty - y_angle_vel_penalty - x_vel_penalty
 
         reward_info = {
             "reward_survive": alive_bonus,
@@ -171,8 +168,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
-            "ang_penalty": -ang_penalty,
-            "vel_penalty": -vel_penalty,
+            "y_angle_vel_penalty": -y_angle_vel_penalty,
+            "x_vel_penalty": -x_vel_penalty,
         }
 
         return reward, reward_info
@@ -182,15 +179,14 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
 
-     #   x_vel = self.data.sensordata[self.model.sensor_refid[3]]
-      #  ang_vel_y = self.data.sensordata[self.model.sensor_refid[2]]  # Nimmt nur die y-Achsen-Winkelgeschwindigkeit
         wheel_sp_l = self.data.sensordata[0]
         wheel_sp_r = self.data.sensordata[1]
-        x_vel = self.data.sensordata[7]
-        ang_vel_y = self.data.sensordata[6]
+        y_angle_vel = self.data.sensordata[3]
+        x_vel = self.data.sensordata[5]
+        sensordata = [wheel_sp_l, wheel_sp_r, x_vel, y_angle_vel]
 
         return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, wheel_sp_l.reshape(1), wheel_sp_r.reshape(1), x_vel.reshape(1), ang_vel_y.reshape(1)])
+                euler, sensordata])
 
 
 
