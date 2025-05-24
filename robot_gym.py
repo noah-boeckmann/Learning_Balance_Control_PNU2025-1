@@ -49,6 +49,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 5   | Bot Z-Rotation                                                    | -Inf | Inf | angle     (deg)           |
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
+    | 8   | Velocity of box in X                                              | -Inf | Inf | vel (m/s)                 |
+    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)    |
 
     """
 
@@ -71,6 +73,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         z_angle_pen: float = 0.1,
         dist_pen: float = 100.0,
         wheel_speed_pen: float = 0.5,
+        x_vel_pen: float = 1.0,
+        y_angle_vel_pen: float = 0.5,
 
         max_angle: float = 0.0,
         rigid: bool = False,
@@ -88,6 +92,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._z_angle_pen = z_angle_pen
         self._dist_pen = dist_pen
         self._wheel_speed_pen = wheel_speed_pen
+        self._x_vel_pen = x_vel_pen
+        self._y_angle_vel_pen = y_angle_vel_pen
 
         self._max_angle = max_angle
         self._difficulty = difficulty_start
@@ -100,7 +106,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         self._eval = eval
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
+
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
         MujocoEnv.__init__(
             self,
@@ -153,13 +160,19 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
-        z_angle = observation[5]
         y_angle = observation[4]
-        dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
+        z_angle = observation[5]
 
-        #y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
-        #y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
+        # x speed and y angle speed sensors:
+        x_vel = observation[8]  # Velocity in x-axis direction
+        y_angle_vel = observation[9]  # Angular velocity around the y-axis
+
+        dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
+
+        # X velocity and y angle velocity penalties:
+        x_vel_penalty = self._x_vel_pen * x_vel ** 2  # avoid too much movement in y
+        y_angle_vel_penalty = self._y_angle_vel_pen * y_angle_vel ** 2  # avoid gier on x achsis
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
@@ -172,7 +185,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty
+        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty - y_angle_vel_penalty - x_vel_penalty
 
         reward_info = {
             "reward_survive": alive_bonus,
@@ -181,6 +194,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
+            "y_angle_vel_penalty": -y_angle_vel_penalty,
+            "x_vel_penalty": -x_vel_penalty,
         }
 
         return reward, reward_info
@@ -190,8 +205,14 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
 
+        wheel_sp_l = self.data.sensordata[0]
+        wheel_sp_r = self.data.sensordata[1]
+        y_angle_vel = self.data.sensordata[3]
+        x_vel = self.data.sensordata[5]
+        sensordata = [wheel_sp_l, wheel_sp_r, x_vel, y_angle_vel]
+
         return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, self.data.sensordata])
+                euler, sensordata])
 
     def reset_model(self):
         # TODO: introduce z angle noise?

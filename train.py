@@ -67,6 +67,8 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
                         rigid = config['rigid'],
                         height_level = config['height_level'],
                         difficulty_start = config['difficulty_start'],
+                        x_vel_pen=config['x_vel_pen'],
+                        y_angle_vel_pen=config['y_angle_vel_pen'],
                         )
         env.reset(seed=seed + rank)
         return env

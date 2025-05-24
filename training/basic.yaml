@@ -21,6 +21,8 @@ y_angle_pen: 0.1
 z_angle_pen: 0.1
 dist_pen: 100.0
 wheel_speed_pen: 0.5
+x_vel_pen: 1
+y_angle_vel_pen: 0.5
 
 # Angle and height settings
 max_angle: 5.0
