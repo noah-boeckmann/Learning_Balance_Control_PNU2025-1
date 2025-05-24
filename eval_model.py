@@ -53,21 +53,28 @@ def main():
         env.close()
         exit(1)
 
-    while True:
-        obs = env.reset()
-        rew = 0
-        for _ in range(100):
-            env.render()
-            time.sleep(0.01)
-        for _ in range(500):
-            action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
-            rew += reward
-            print(info)
-            time.sleep(0.01)
-            if done:
-                print(rew)
-                time.sleep(5)
-                break
+    try:
+        while True:
+            obs = env.reset()
+            rew = 0
+            for _ in range(100):
+                env.render()
+                time.sleep(0.01)
+            for _ in range(500):
+                action, _states = model.predict(obs, deterministic=True)
+                obs, reward, done, info = env.step(action)
+                rew += reward
+                print(info)
+                time.sleep(0.01)
+                if done:
+                    print(rew)
+                    time.sleep(5)
+                    break
+
+    except KeyboardInterrupt:
+        print("Exiting...")
+        env.close()
+        exit(0)
+
 if __name__ == '__main__':
     main()
