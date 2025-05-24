@@ -17,6 +17,9 @@ DEFAULT_CAMERA_CONFIG = {
 }
 
 
+def _sig_of_a_quad(penalty, observation):
+    return 2 / (1 + np.exp((penalty * observation**2))) - 1
+
 class WheelBotEnv(MujocoEnv, utils.EzPickle):
     r"""
     This environment takes the wheelbot model and makes it trainable.
@@ -142,69 +145,93 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         #     print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
         #     exit(1)
 
-        temp = "SAC"
-        # if config["algo"] == "PPO":
-        if temp == "PPO":
-            x, y = observation[0], observation[1]
-            z_angle = observation[5]
-            y_angle = observation[4]
-            wheel_speed_l = observation[6]
-            wheel_speed_r = observation[7]
+        # OLD REWARD FUNCTION
+        # x, y = observation[0], observation[1]
+        # z_angle = observation[5]
+        # y_angle = observation[4]
+        # wheel_speed_l = observation[6]
+        # wheel_speed_r = observation[7]
+        #
+        # dist_penalty = self._dist_pen * x ** 2  # + 0.1 * y ** 2
+        #
+        # # y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
+        # # y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
+        # y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
+        #
+        # wheel_l_penalty = self._wheel_speed_pen * wheel_speed_l ** 2
+        # wheel_r_penalty = self._wheel_speed_pen * wheel_speed_r ** 2
+        #
+        # # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
+        # z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
+        #
+        # alive_bonus = self._healthy_reward * int(not terminated)
+        #
+        # reward = (
+        #         alive_bonus
+        #         - dist_penalty
+        #         - y_angle_penalty
+        #         - wheel_l_penalty
+        #         - wheel_r_penalty
+        #         - z_angle_penalty
+        # )
 
-            dist_penalty = self._dist_pen * x ** 2  # + 0.1 * y ** 2
+        # Attempt
+        # x, y = observation[0], observation[1]
+        # z_angle = observation[5]
+        # y_angle = observation[4]
+        # wheel_speed_l = observation[6]
+        # wheel_speed_r = observation[7]
+        #
+        # dist_penalty = self._dist_pen * np.tanh(x ** 2 + y ** 2)
+        # y_angle_penalty = self._y_angle_pen * np.tanh(y_angle ** 2)
+        # # wheel_l_penalty = self._wheel_speed_pen * np.tanh(abs(wheel_speed_l))
+        # # wheel_r_penalty = self._wheel_speed_pen * np.tanh(abs(wheel_speed_r))
+        # wheel_l_penalty = self._wheel_speed_pen * np.tanh(wheel_speed_l ** 2)
+        # wheel_r_penalty = self._wheel_speed_pen * np.tanh(wheel_speed_r ** 2)
+        # z_angle_penalty = self._z_angle_pen * np.tanh(z_angle ** 2)  # FIXME: z is not measured in the world (
+        # # reference) frame - no issue when upright but should be looked into
+        #
+        # alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
+        #
+        # # Optional: bonus for staying upright
+        # # upright_bonus = 1.0 - abs(y_angle) / np.pi  # normalized
+        #
+        # reward = (
+        #         alive_bonus
+        #         # + 0.5 * upright_bonus
+        #         - dist_penalty
+        #         - y_angle_penalty
+        #         - wheel_l_penalty
+        #         - wheel_r_penalty
+        #         - z_angle_penalty
+        # )
 
-            # y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
-            # y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
-            y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
+        x, y = observation[0], observation[1]
+        z_angle = observation[5]
+        y_angle = observation[4]
+        wheel_speed_l = observation[6]
+        wheel_speed_r = observation[7]
 
-            wheel_l_penalty = self._wheel_speed_pen * wheel_speed_l ** 2
-            wheel_r_penalty = self._wheel_speed_pen * wheel_speed_r ** 2
+        dist_penalty = _sig_of_a_quad(self._dist_pen,x)
+        y_angle_penalty = _sig_of_a_quad(self._y_angle_pen,y_angle)
+        wheel_l_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_l)
+        wheel_r_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_r)
+        z_angle_penalty = _sig_of_a_quad(self._z_angle_pen,z_angle)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
 
-            # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
-            z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
+        alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
 
-            alive_bonus = self._healthy_reward * int(not terminated)
+        # Optional: bonus for staying upright
+        # upright_bonus = 1.0 - abs(y_angle) / np.pi  # normalized
 
-            reward = (
-                    alive_bonus
-                    - dist_penalty
-                    - y_angle_penalty
-                    - wheel_l_penalty
-                    - wheel_r_penalty
-                    - z_angle_penalty
-            )
-
-        # elif config["algo"] == "SAC":
-        elif temp == "SAC":
-            x, y = observation[0], observation[1]
-            z_angle = observation[5]
-            y_angle = observation[4]
-            wheel_speed_l = observation[6]
-            wheel_speed_r = observation[7]
-
-            dist_penalty = self._dist_pen * (x ** 2)  # + 0.1 * y ** 2
-            y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
-
-            wheel_l_penalty = self._wheel_speed_pen * abs(wheel_speed_l)
-            wheel_r_penalty = self._wheel_speed_pen * abs(wheel_speed_r)
-
-            # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
-            z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
-
-            alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
-
-            # Optional: bonus for staying upright
-            # upright_bonus = 1.0 - abs(y_angle) / np.pi  # normalized
-
-            reward = (
-                    alive_bonus
-                    # + 0.5 * upright_bonus
-                    - dist_penalty
-                    - y_angle_penalty
-                    - wheel_l_penalty
-                    - wheel_r_penalty
-                    - z_angle_penalty
-            )
+        reward = (
+                alive_bonus
+                # + 0.5 * upright_bonus
+                - dist_penalty
+                - y_angle_penalty
+                - wheel_l_penalty
+                - wheel_r_penalty
+                - z_angle_penalty
+        )
 
         reward_info = {
             "reward_survive": alive_bonus,

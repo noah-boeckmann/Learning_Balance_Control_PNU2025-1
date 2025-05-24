@@ -19,24 +19,25 @@ def main():
     # model = PPO.load("training/basic_checkpoints/basic_10000000_steps.zip", device="cpu")
     # model = PPO.load("training/LRate_HRew_checkpoints/best_model.zip", device="cpu")
     # model = PPO.load("training/LRate_DPen_WSpeed_checkpoints/best_model.zip", device="cpu")
-    model = SAC.load("training/temp_test_checkpoints/temp_test_1000000_steps.zip", device="cpu")
+    # model = SAC.load("training/base_checkpoints/base_3500000_steps.zip", device="cpu")
+    model = SAC.load("training/base_SAC_checkpoints/best_model.zip", device="cpu")
     print("Model loaded. Starting evaluation...")
 
     while True:
         obs = env.reset()
         rew = 0
-        for _ in range(200):
+        for _ in range(100):
             env.render()
             time.sleep(0.01)
-        for _ in range(1024):
+        for _ in range(5096):
             action, _states = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             rew += reward
             print(info)
-            time.sleep(0.01)
+            time.sleep(0.05)
             if done:
-                print(rew)
-                time.sleep(2)
+                print("Reward: ", rew)
+                time.sleep(0.1)
                 break
 if __name__ == '__main__':
     main()
