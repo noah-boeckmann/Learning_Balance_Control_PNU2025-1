@@ -77,6 +77,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         wheel_speed_pen: float = 0.5,
         reset_noise_scale: float = 0.0,
         difficulty_start: float = 0.0,
+        x_vel_pen: float = 1.0,
+        y_angle_vel_pen: float = 0.5,
+
 
         **kwargs,
     ):
@@ -92,6 +95,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._difficulty = difficulty_start
         self._difficulty_start = difficulty_start
         self._bot_height = bot_height
+        self._x_vel_pen = x_vel_pen
+        self._y_angle_vel_pen = y_angle_vel_pen
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
@@ -145,8 +150,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
 
         # X velocity and y angle velocity penalties:
-        x_vel_penalty = 1.0 * x_vel ** 2  # avoid too much movement in y
-        y_angle_vel_penalty = 0.5 * y_angle_vel ** 2  # avoid gier on x achsis
+        x_vel_penalty = self._x_vel_pen * x_vel ** 2  # avoid too much movement in y
+        y_angle_vel_penalty = self._y_angle_vel_pen * y_angle_vel ** 2  # avoid gier on x achsis
 
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
