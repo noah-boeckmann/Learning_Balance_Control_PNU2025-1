@@ -105,7 +105,6 @@
     <actuatorvel actuator="wheel_r_m"/>
     <!-- angle velocity around y-->
     <frameangvel name="body_y_ang_vel" objtype="body" objname="base"/>
-
     <!-- velocity in x-->
     <velocimeter name="body_x_vel" site="boxsens"/>
   </sensor>
