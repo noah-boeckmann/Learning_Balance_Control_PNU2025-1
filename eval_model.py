@@ -32,7 +32,7 @@ def main():
         print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
         exit(1)
 
-    policy_file = os.path.join(base_path, file_path.split("/")[-1].split(".")[0])
+    policy_file = os.path.join(base_path, file_path.split("/")[-1].split(".")[0] + ".zip")
 
     env = DummyVecEnv([lambda: gym.make('WheelBot',
                             xml_file="./bot_model/wheelbot.xml",
