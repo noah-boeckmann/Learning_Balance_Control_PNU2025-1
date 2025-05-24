@@ -66,7 +66,7 @@ def make_height_env(rank, config:dict, seed=0, render_mode=None):
                         z_angle_pen = config['z_angle_pen'],
                         dist_pen = config['dist_pen'],
                         wheel_speed_pen = config['wheel_speed_pen'],
-                        reset_noise_scale = config['reset_noise_scale'],
+                        max_angle = config['reset_noise_scale'],
                         difficulty_start = config['difficulty_start'],
                         )
         env.reset(seed=seed + rank)

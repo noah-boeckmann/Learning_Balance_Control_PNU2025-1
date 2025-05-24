@@ -65,19 +65,23 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self,
         xml_file: str = "./bot_model/wheelbot.xml",
         frame_skip: int = 1,
-        bot_height: float = 0.635,
         default_camera_config: Dict[str, Union[float, int]] = {},
         healthy_reward: float = 20.0,
         y_angle_pen: float = 0.1,
         z_angle_pen: float = 0.1,
         dist_pen: float = 100.0,
         wheel_speed_pen: float = 0.5,
-        reset_noise_scale: float = 0.0,
+
+        max_angle: float = 0.0,
+        rigid: bool = False,
+        height_level: float = 1.0,
         difficulty_start: float = 0.0,
+        eval: bool = False,
+
 
         **kwargs,
     ):
-        utils.EzPickle.__init__(self, xml_file, frame_skip, reset_noise_scale, **kwargs)
+        utils.EzPickle.__init__(self, xml_file, frame_skip, max_angle, **kwargs)
 
         self._healthy_reward = healthy_reward
         self._y_angle_pen = y_angle_pen
@@ -85,16 +89,16 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._dist_pen = dist_pen
         self._wheel_speed_pen = wheel_speed_pen
 
-        self._reset_noise_scale = reset_noise_scale
+        self._max_angle = max_angle
         self._difficulty = difficulty_start
         self._difficulty_start = difficulty_start
 
-        self._bot_height = bot_height
-        self._height_level = 1.0
+        self._bot_height = None # Will be calculated in reset
         self._height_actor_max = 0.872665
-        self._height_actor_action = [-0, 0, 0, -0]
-        self.sim_step_counter = 0
+        self._rigid = rigid
+        self.set_height_level(height_level)
 
+        self._eval = eval
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
 
@@ -144,6 +148,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         actor_angle = self._height_actor_max * (1 - self._height_level)
         self._height_actor_action = [-actor_angle, actor_angle, actor_angle, -actor_angle]
 
+    def set_max_angle(self, angle):
+        self._max_angle = angle
+
     def _get_rew(self, observation, terminated):
         x, y = observation[0], observation[1]
         z_angle = observation[5]
@@ -187,18 +194,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 euler, self.data.sensordata])
 
     def reset_model(self):
-        # TODO: introduce an eval mode in which the angle can be set manually without RNG. Also useful for potential further perturbations
         # TODO: introduce z angle noise?
-        # TODO: enable varying the height of the robot?
 
-        # set the robots height
-        self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+        if self._eval:
+            angle = self._max_angle
+
+        else:
+            # generate a random starting angle
+            angle_low = -self._max_angle * self._difficulty
+            angle_high = self._max_angle * self._difficulty
+            angle = self.np_random.uniform(angle_low, angle_high)
+
+            # set a random height level if not rigid
+            if not self._rigid: self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+
         self._bot_height, beta = self.calculate_reset_hinge_angles()
-
-        noise_low = -self._reset_noise_scale * self._difficulty
-        noise_high = self._reset_noise_scale * self._difficulty
-
-        angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
         angle = angle * np.pi / 180
         quat = R.from_euler(seq="y", angles=angle).as_quat()
 
