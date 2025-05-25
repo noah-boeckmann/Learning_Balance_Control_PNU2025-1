@@ -216,7 +216,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         y_angle_penalty = _sig_of_a_quad(self._y_angle_pen,y_angle)
         wheel_l_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_l)
         wheel_r_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_r)
-        z_angle_penalty = _sig_of_a_quad(self._z_angle_pen,z_angle)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
+        z_angle_penalty = _sig_of_a_quad(self._z_angle_pen,z_angle)  # FIXME: z is not measured in the world (
+        # reference) frame - no issue when upright but should be looked into
 
         alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
 
