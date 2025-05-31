@@ -16,9 +16,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Show a trained model")
 
     # Add hyperparameters you want to control from command line
-    parser.add_argument('train_file', type=str, help="Path to policy file")
+    parser.add_argument('train_file', type=str, help="Path to policy file, either YAML or zip with default values (10 deg, full height change")
     parser.add_argument('algo', type=str, choices=["PPO", "SAC"], help="Algorithm to evaluate")
-    parser.add_argument('--info', type=str, choices=["rew", "act", "obs"], default="rew")
+    parser.add_argument('--info', type=str, choices=["rew", "act", "obs"], default="rew", help="Which type of information to output to console")
     return parser.parse_args()
 
 

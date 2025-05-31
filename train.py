@@ -14,6 +14,7 @@ import argparse
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor, DummyVecEnv
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
+from stable_baselines3.common.evaluation import evaluate_policy
 
 
 def parse_args():
@@ -76,6 +77,44 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
         return env
     return _init
 
+def SAC_warmup(env, model, warmup_policy, num_envs, buffer_size):
+    expert_data = {
+        "obs": [],
+        "actions": [],
+        "rewards": [],
+        "next_obs": [],
+        "dones": [],
+        "infos": [],
+    }
+
+    obs = env.reset()
+    for i in range(int(buffer_size / num_envs)):
+        actions, _ = warmup_policy.predict(obs, deterministic=True)
+        next_obs, rewards, dones, infos = env.step(actions)
+
+        for i in range(num_envs):
+            expert_data["obs"].append(obs)
+            expert_data["actions"].append(actions)
+            expert_data["rewards"].append([rewards])
+            expert_data["next_obs"].append(next_obs)
+            expert_data["dones"].append([dones])
+            expert_data["infos"].append(infos)
+
+        obs = next_obs
+
+    for k in expert_data:
+        expert_data[k] = np.array(expert_data[k])
+
+    for i in range(len(expert_data["obs"])):
+        model.replay_buffer.add(
+            expert_data["obs"][i],
+            expert_data["next_obs"][i],
+            expert_data["actions"][i],
+            expert_data["rewards"][i],
+            expert_data["dones"][i],
+            expert_data["infos"][i]
+        )
+
 def main():
     args = parse_args()
     train_name, base_path, config = prepare_training(args)
@@ -87,7 +126,8 @@ def main():
         env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
     env = VecMonitor(env)
 
-    config["eval"] = True
+    config["eval"] = False # Enable the evaluation to behave randomly, this is different from what we initially wanted
+    config["difficulty_start"] = 1.0
     eval_env = DummyVecEnv([make_env(999, config)])
     eval_env = VecMonitor(eval_env)
 
@@ -174,45 +214,7 @@ def main():
                                  tensorboard_log=args.tensorboard_log,
                                  device="cpu",
                                  )
-
-                expert_data = {
-                    "obs": [],
-                    "actions": [],
-                    "rewards": [],
-                    "next_obs": [],
-                    "dones": [],
-                    "infos": [],
-                }
-
-                obs = env.reset()
-                for i in range(int(config["buffer_size"] / args.num_envs)):
-                    actions, _ = warmup_policy.predict(obs, deterministic=True)
-                    next_obs, rewards, dones, infos = env.step(actions)
-
-                    
-                    for i in range(args.num_envs):
-                        expert_data["obs"].append(obs)
-                        expert_data["actions"].append(actions)
-                        expert_data["rewards"].append([rewards])
-                        expert_data["next_obs"].append(next_obs)
-                        expert_data["dones"].append([dones])
-                        expert_data["infos"].append(infos)
-
-                    obs = next_obs
-
-                for k in expert_data:
-                    expert_data[k] = np.array(expert_data[k])
-
-                for i in range(len(expert_data["obs"])):
-                    model.replay_buffer.add(
-                        expert_data["obs"][i],
-                        expert_data["next_obs"][i],
-                        expert_data["actions"][i],
-                        expert_data["rewards"][i],
-                        expert_data["dones"][i],
-                        expert_data["infos"][i]
-                    )
-
+                SAC_warmup(env, model, warmup_policy, args.num_envs, config['buffer_size'])
 
     try:
         # Train the model
@@ -224,6 +226,16 @@ def main():
     save_path = os.path.join(base_path, train_name + ".zip")
     print("Saving final model to: " + save_path)
     model.save(save_path)
+
+    mean_reward, std_reward = evaluate_policy(
+        model,
+        eval_env,
+        n_eval_episodes=100,
+        render=False,
+        deterministic=True,
+        return_episode_rewards=False,
+    )
+    print(f"Final evaluation reward: {mean_reward:.2f} ± {std_reward:.2f}")
 
     env.close()
     exit(0)
