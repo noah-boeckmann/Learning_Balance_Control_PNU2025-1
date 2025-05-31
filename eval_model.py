@@ -17,6 +17,8 @@ def parse_args():
 
     # Add hyperparameters you want to control from command line
     parser.add_argument('train_file', type=str, help="Path to policy file")
+    parser.add_argument('algo', type=str, choices=["PPO", "SAC"], help="Algorithm to evaluate")
+    parser.add_argument('--info', type=str, choices=["rew", "act", "obs"], default="rew")
     return parser.parse_args()
 
 
@@ -25,14 +27,30 @@ def main():
     file_path = args.train_file
     base_path = os.path.dirname(file_path)
     config = None
+    policy_file = None
+    config = {}
     try:
-        with open(file_path, 'r') as file:
-            config = yaml.safe_load(file)
+        if file_path.split("/")[-1].split(".")[-1] == "yaml":
+            with open(file_path, 'r') as file:
+                config = yaml.safe_load(file)
+            policy_file = os.path.join(base_path, file_path.split("/")[-1].split(".")[0] + ".zip")
+
+            if not os.path.exists(policy_file):
+                raise FileNotFoundError("Policy file not found")
+
+        else:
+            policy_file = os.path.join(base_path, file_path.split("/")[-1].split(".")[0] + ".zip")
+            config['rigid'] = False
+            config['max_angle'] = 10
+            config['height_level'] = 1.0
+
+            if not os.path.exists(policy_file):
+                raise FileNotFoundError("Policy file not found")
+
     except FileNotFoundError:
         print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
         exit(1)
 
-    policy_file = os.path.join(base_path, file_path.split("/")[-1].split(".")[0] + ".zip")
 
     env = DummyVecEnv([lambda: gym.make('WheelBot',
                             xml_file="./bot_model/wheelbot.xml",
@@ -44,9 +62,9 @@ def main():
                             difficulty_start = 1.0,
                             frame_skip=1, width=1000, height=1000)])
 
-    if config["algo"] == "PPO":
+    if args.algo == "PPO":
         model = PPO.load(policy_file, device="cpu")
-    elif config["algo"] == "SAC":
+    elif args.algo == "SAC":
         model = SAC.load(policy_file, device="cpu")
     else:
         print("The algo " + config["algo"] + "does not exist, aborting!", file=sys.stderr)
@@ -64,7 +82,14 @@ def main():
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
                 rew += reward
-                print(info)
+
+                if args.info == "rew":
+                    print("Reward: " + str(reward) + " | "+ str(info))
+                elif args.info == "act":
+                    print("Action: " + str(action))
+                elif args.info == "obs":
+                    print("Obs: " + str(obs))
+
                 time.sleep(0.01)
                 if done:
                     print(rew)
