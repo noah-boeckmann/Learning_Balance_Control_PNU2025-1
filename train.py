@@ -230,7 +230,7 @@ def main():
     mean_reward, std_reward = evaluate_policy(
         model,
         eval_env,
-        n_eval_episodes=100,
+        n_eval_episodes=config["n_eval_ep"],
         render=False,
         deterministic=True,
         return_episode_rewards=False,
