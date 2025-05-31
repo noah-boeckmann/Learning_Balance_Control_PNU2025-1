@@ -55,7 +55,7 @@ def prepare_training(args : argparse.Namespace):
 def make_env(rank, config:dict, seed=0, render_mode=None):
     def _init():
         env = gym.make('WheelBot', max_episode_steps=config["max_ep_steps"],
-                        xml_file="./bot_model/wheelbot_rigid.xml",
+                        xml_file="./bot_model/wheelbot.xml",
                         render_mode=render_mode,
                         width=1000, height=1000,
                         healthy_reward = config['healthy_reward'],
@@ -63,8 +63,12 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
                         z_angle_pen = config['z_angle_pen'],
                         dist_pen = config['dist_pen'],
                         wheel_speed_pen = config['wheel_speed_pen'],
-                        reset_noise_scale = config['reset_noise_scale'],
+                        max_angle = config['max_angle'],
+                        rigid = config['rigid'],
+                        height_level = config['height_level'],
                         difficulty_start = config['difficulty_start'],
+                        x_vel_pen=config['x_vel_pen'],
+                        y_angle_vel_pen=config['y_angle_vel_pen'],
                         )
         env.reset(seed=seed + rank)
         return env
@@ -81,7 +85,7 @@ def main():
         env = SubprocVecEnv([make_env(i, config) for i in range(args.num_envs)])
     env = VecMonitor(env)
 
-    config["difficulty_start"] = 1.0
+    config["eval"] = True
     eval_env = DummyVecEnv([make_env(999, config)])
     eval_env = VecMonitor(eval_env)
 
@@ -128,6 +132,11 @@ def main():
                              device=args.device,
                              learning_rate=config["learning_rate"],
                              )
+        else:
+            print("The algo " + config["algo"] + "does not exist, aborting!", file=sys.stderr)
+            env.close()
+            eval_env.close()
+            exit(1)
     else:
         print("Starting a fresh " + config["algo"] + " training")
         if config["algo"] == "PPO":

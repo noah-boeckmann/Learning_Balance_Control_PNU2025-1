@@ -3,8 +3,6 @@ from typing import Dict, Union
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-import yaml
-
 from gymnasium import utils
 from gymnasium.envs.mujoco import MujocoEnv
 from gymnasium.spaces import Box
@@ -55,6 +53,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 5   | Bot Z-Rotation                                                    | -Inf | Inf | angle     (deg)           |
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
+    | 8   | Velocity of box in X                                              | -Inf | Inf | vel (m/s)                 |
+    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)    |
 
     """
 
@@ -71,32 +71,46 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self,
         xml_file: str = "./bot_model/wheelbot.xml",
         frame_skip: int = 1,
-        bot_height: float = 0.635,
         default_camera_config: Dict[str, Union[float, int]] = {},
         healthy_reward: float = 20.0,
         y_angle_pen: float = 0.1,
         z_angle_pen: float = 0.1,
         dist_pen: float = 100.0,
         wheel_speed_pen: float = 0.5,
-        reset_noise_scale: float = 0.0,
+        x_vel_pen: float = 1.0,
+        y_angle_vel_pen: float = 0.5,
+        max_angle: float = 0.0,
+        rigid: bool = False,
+        height_level: float = 1.0,
         difficulty_start: float = 0.0,
+        eval: bool = False,
+
 
         **kwargs,
     ):
-        utils.EzPickle.__init__(self, xml_file, frame_skip, reset_noise_scale, **kwargs)
+        utils.EzPickle.__init__(self, xml_file, frame_skip, max_angle, **kwargs)
 
         self._healthy_reward = healthy_reward
         self._y_angle_pen = y_angle_pen
         self._z_angle_pen = z_angle_pen
         self._dist_pen = dist_pen
         self._wheel_speed_pen = wheel_speed_pen
+        self._x_vel_pen = x_vel_pen
+        self._y_angle_vel_pen = y_angle_vel_pen
 
-        self._reset_noise_scale = reset_noise_scale
+        self._max_angle = max_angle
         self._difficulty = difficulty_start
         self._difficulty_start = difficulty_start
-        self._bot_height = bot_height
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(8,), dtype=np.float64)
+        self._bot_height = None # Will be calculated in reset
+        self._height_actor_max = 0.872665
+        self._rigid = rigid
+        self.set_height_level(height_level)
+
+        self._eval = eval
+
+
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
         MujocoEnv.__init__(
             self,
@@ -106,6 +120,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             default_camera_config=default_camera_config,
             **kwargs,
         )
+
+        self.action_space = Box(low=-100, high=100, shape=(2,), dtype=np.float32)
 
         self.metadata = {
             "render_modes": [
@@ -118,6 +134,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         }
 
     def step(self, action):
+
+        action = np.concatenate([self._height_actor_action, action], axis=0)
         self.do_simulation(action, self.frame_skip)
 
         observation = self._get_obs()
@@ -135,80 +153,23 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     def set_difficulty(self, difficulty):
         self._difficulty = max(self._difficulty_start, difficulty)
 
+    def set_height_level(self, height_level):
+        self._height_level = height_level
+        actor_angle = self._height_actor_max * (1 - self._height_level)
+        self._height_actor_action = [-actor_angle, actor_angle, actor_angle, -actor_angle]
+
+    def set_max_angle(self, angle):
+        self._max_angle = angle
+
     def _get_rew(self, observation, terminated):
-
-        # config = None
-        # try:
-        #     with open(file_path, 'r') as file:
-        #         config = yaml.safe_load(file)
-        # except FileNotFoundError:
-        #     print("The file " + str(file_path) + " does not exist, aborting!", file=sys.stderr)
-        #     exit(1)
-
-        # OLD REWARD FUNCTION
-        # x, y = observation[0], observation[1]
-        # z_angle = observation[5]
-        # y_angle = observation[4]
-        # wheel_speed_l = observation[6]
-        # wheel_speed_r = observation[7]
-        #
-        # dist_penalty = self._dist_pen * x ** 2  # + 0.1 * y ** 2
-        #
-        # # y_angle_penalty = min(100, 3.5 * np.exp(0.2 * abs(y_angle)) - 3.5)
-        # # y_angle_penalty = min(100, 0.4 * (y_angle ** 2))
-        # y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
-        #
-        # wheel_l_penalty = self._wheel_speed_pen * wheel_speed_l ** 2
-        # wheel_r_penalty = self._wheel_speed_pen * wheel_speed_r ** 2
-        #
-        # # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
-        # z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
-        #
-        # alive_bonus = self._healthy_reward * int(not terminated)
-        #
-        # reward = (
-        #         alive_bonus
-        #         - dist_penalty
-        #         - y_angle_penalty
-        #         - wheel_l_penalty
-        #         - wheel_r_penalty
-        #         - z_angle_penalty
-        # )
-
-        # Attempt
-        # x, y = observation[0], observation[1]
-        # z_angle = observation[5]
-        # y_angle = observation[4]
-        # wheel_speed_l = observation[6]
-        # wheel_speed_r = observation[7]
-        #
-        # dist_penalty = self._dist_pen * np.tanh(x ** 2 + y ** 2)
-        # y_angle_penalty = self._y_angle_pen * np.tanh(y_angle ** 2)
-        # # wheel_l_penalty = self._wheel_speed_pen * np.tanh(abs(wheel_speed_l))
-        # # wheel_r_penalty = self._wheel_speed_pen * np.tanh(abs(wheel_speed_r))
-        # wheel_l_penalty = self._wheel_speed_pen * np.tanh(wheel_speed_l ** 2)
-        # wheel_r_penalty = self._wheel_speed_pen * np.tanh(wheel_speed_r ** 2)
-        # z_angle_penalty = self._z_angle_pen * np.tanh(z_angle ** 2)  # FIXME: z is not measured in the world (
-        # # reference) frame - no issue when upright but should be looked into
-        #
-        # alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
-        #
-        # # Optional: bonus for staying upright
-        # # upright_bonus = 1.0 - abs(y_angle) / np.pi  # normalized
-        #
-        # reward = (
-        #         alive_bonus
-        #         # + 0.5 * upright_bonus
-        #         - dist_penalty
-        #         - y_angle_penalty
-        #         - wheel_l_penalty
-        #         - wheel_r_penalty
-        #         - z_angle_penalty
-        # )
-
         x, y = observation[0], observation[1]
-        z_angle = observation[5]
         y_angle = observation[4]
+        z_angle = observation[5]
+
+        # x speed and y angle speed sensors:
+        x_vel = observation[8]  # Velocity in x-axis direction
+        y_angle_vel = observation[9]  # Angular velocity around the y-axis
+
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
 
@@ -216,22 +177,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         y_angle_penalty = _sig_of_a_quad(self._y_angle_pen,y_angle)
         wheel_l_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_l)
         wheel_r_penalty = _sig_of_a_quad(self._wheel_speed_pen,wheel_speed_r)
-        z_angle_penalty = _sig_of_a_quad(self._z_angle_pen,z_angle)  # FIXME: z is not measured in the world (
-        # reference) frame - no issue when upright but should be looked into
+        z_angle_penalty = _sig_of_a_quad(self._z_angle_pen,z_angle)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
+        x_vel_penalty = _sig_of_a_quad(self._x_vel_pen, x_vel)
+        y_angle_vel_penalty = _sig_of_a_quad(self._y_angle_vel_pen, y_angle_vel)
 
-        alive_bonus = self._healthy_reward  # Smooth alive reward (avoid discontinuities for SAC)
-
-        # Optional: bonus for staying upright
-        # upright_bonus = 1.0 - abs(y_angle) / np.pi  # normalized
+        alive_bonus = self._healthy_reward * int(not terminated)
 
         reward = (
                 alive_bonus
-                # + 0.5 * upright_bonus
                 - dist_penalty
                 - y_angle_penalty
                 - wheel_l_penalty
                 - wheel_r_penalty
                 - z_angle_penalty
+                - y_angle_vel_penalty
+                - x_vel_penalty
         )
 
         reward_info = {
@@ -241,6 +201,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
+            "y_angle_vel_penalty": -y_angle_vel_penalty,
+            "x_vel_penalty": -x_vel_penalty,
         }
 
         return reward, reward_info
@@ -250,18 +212,31 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         quat_xyzw = [quat[1], quat[2], quat[3], quat[0]]  # convert to [x, y, z, w]
         euler = R.from_quat(quat_xyzw).as_euler('xyz', degrees=True)
 
+        wheel_sp_l = self.data.sensordata[0]
+        wheel_sp_r = self.data.sensordata[1]
+        y_angle_vel = self.data.sensordata[3]
+        x_vel = self.data.sensordata[5]
+        sensordata = [wheel_sp_l, wheel_sp_r, x_vel, y_angle_vel]
+
         return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, self.data.sensordata])
+                euler, sensordata])
 
     def reset_model(self):
-        # TODO: introduce an eval mode in which the angle can be set manually without RNG. Also useful for potential further perturbations
         # TODO: introduce z angle noise?
-        # TODO: enable varying the height of the robot?
 
-        noise_low = -self._reset_noise_scale * self._difficulty
-        noise_high = self._reset_noise_scale * self._difficulty
+        if self._eval:
+            angle = self._max_angle
 
-        angle = self.np_random.uniform(10 * noise_low, 10 * noise_high)
+        else:
+            # generate a random starting angle
+            angle_low = -self._max_angle * self._difficulty
+            angle_high = self._max_angle * self._difficulty
+            angle = self.np_random.uniform(angle_low, angle_high)
+
+            # set a random height level if not rigid
+            if not self._rigid: self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+
+        self._bot_height, beta = self.calculate_reset_hinge_angles()
         angle = angle * np.pi / 180
         quat = R.from_euler(seq="y", angles=angle).as_quat()
 
@@ -276,8 +251,31 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         state[3] = quat[3]
         state[4:7] = quat[:3]
 
+        # set the angle actor initial angles
+        state[7], state[10], state[12], state[15] = self._height_actor_action
+        self.data.ctrl = np.concatenate([self._height_actor_action, [0.0, 0.0]])
+
+        # set the second leg hinges to their appropriate angles to avoid excessive movement at simulation start
+        state[8] = beta
+        state[11] = -beta
+        state[13] = -beta
+        state[16] = beta
+
         self.set_state(
             state,
             self.init_qvel,
         )
         return self._get_obs()
+
+    def calculate_reset_hinge_angles(self):
+        actor_angle = self._height_actor_action[1] # Take the positive height actor angle
+
+        alpha = actor_angle + 0.698132 # add angle offset of joint
+        a = np.cos(alpha) * 0.28 # Length of the first leg part triangle
+        b = np.sqrt(0.165649 - (np.sin(alpha) * 0.28 + 0.07) ** 2) # Length of the second leg part triangle
+        height = a + b # Bot height from box frame to wheel hub
+        beta = alpha + np.arccos(b / 0.407) # Angle from leg part 1 to leg part 2
+
+        height = height + 0.1 # add wheel height
+
+        return height, beta

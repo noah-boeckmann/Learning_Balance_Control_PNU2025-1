@@ -35,6 +35,7 @@
 
       <!-- Geometry for visualization -->
       <geom type="box" density="753" size="0.14 0.2 0.065" rgba="0.8 0.3 0.3 1" contype="1" conaffinity="1"/>
+      <site name="boxsens" pos="0 0.001 0"/>
 
       <body name="leg_1_l_1" pos="0.07 0.2 0" euler="90 180 -40">
         <geom type="mesh" mesh="leg_1" density="1" rgba="0.8 0.4 0.1 1" group="1"/>
@@ -102,6 +103,10 @@
   <sensor>
     <actuatorvel actuator="wheel_l_m"/>
     <actuatorvel actuator="wheel_r_m"/>
+    <!-- angle velocity around y-->
+    <frameangvel name="body_y_ang_vel" objtype="body" objname="base"/>
+    <!-- velocity in x-->
+    <velocimeter name="body_x_vel" site="boxsens"/>
   </sensor>
 
 </mujoco>
