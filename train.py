@@ -1,4 +1,6 @@
 import gymnasium as gym
+import numpy as np
+
 import robot_gym
 from CurriculumCallback import CurriculumCallback
 
@@ -127,10 +129,13 @@ def main():
         elif config["algo"] == "SAC":
             model = SAC.load(args.cont_train,
                              env=env,
-                             verbose=0,
+                             verbose=1,
                              tensorboard_log=args.tensorboard_log,
                              device=args.device,
                              learning_rate=config["learning_rate"],
+                             buffer_size=config["buffer_size"],
+                             batch_size=config["batch_size"],
+                             learning_starts=config["learning_starts"],
                              )
         else:
             print("The algo " + config["algo"] + "does not exist, aborting!", file=sys.stderr)
@@ -152,11 +157,62 @@ def main():
         elif config["algo"] == "SAC":
             model = SAC(config["policy"],
                         env,
-                        verbose=0,
+                        verbose=1,
                         tensorboard_log=args.tensorboard_log,
                         device=args.device,
                         learning_rate=config["learning_rate"],
+                        buffer_size=config["buffer_size"],
+                        batch_size=config["batch_size"],
+                        learning_starts=config["learning_starts"],
                         )
+
+            if config["warmup"] != "":
+                print("Warming up with policy: " + config["warmup"])
+                warmup_policy = PPO.load(config["warmup"],
+                                 env=env,
+                                 verbose=1,
+                                 tensorboard_log=args.tensorboard_log,
+                                 device="cpu",
+                                 )
+
+                expert_data = {
+                    "obs": [],
+                    "actions": [],
+                    "rewards": [],
+                    "next_obs": [],
+                    "dones": [],
+                    "infos": [],
+                }
+
+                obs = env.reset()
+                for i in range(int(config["buffer_size"] / args.num_envs)):
+                    actions, _ = warmup_policy.predict(obs, deterministic=True)
+                    next_obs, rewards, dones, infos = env.step(actions)
+
+                    
+                    for i in range(args.num_envs):
+                        expert_data["obs"].append(obs)
+                        expert_data["actions"].append(actions)
+                        expert_data["rewards"].append([rewards])
+                        expert_data["next_obs"].append(next_obs)
+                        expert_data["dones"].append([dones])
+                        expert_data["infos"].append(infos)
+
+                    obs = next_obs
+
+                for k in expert_data:
+                    expert_data[k] = np.array(expert_data[k])
+
+                for i in range(len(expert_data["obs"])):
+                    model.replay_buffer.add(
+                        expert_data["obs"][i],
+                        expert_data["next_obs"][i],
+                        expert_data["actions"][i],
+                        expert_data["rewards"][i],
+                        expert_data["dones"][i],
+                        expert_data["infos"][i]
+                    )
+
 
     try:
         # Train the model
