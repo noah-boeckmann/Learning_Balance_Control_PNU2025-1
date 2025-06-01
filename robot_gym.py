@@ -161,16 +161,17 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x, y, z = observation[0], observation[1], observation[2]  # only use x
         x_angle, y_angle, z_angle = observation[1], observation[4], observation[5]  # only use y_angle z_angle
 
-        # x velocity and y angle velocity sensors
         x_vel = observation[8]  # Velocity in x-axis direction
         y_angle_vel = observation[9]  # Angular velocity around the y-axis
 
-        # Wheel speed sensors
-        wheel_speed_l = observation[6]
-        wheel_speed_r = observation[7]
+        wheel_speed_l = observation[6]  # left wheel speed
+        wheel_speed_r = observation[7]  # right wheel speed
 
-        dist_penalty = self._dist_pen * x**2 #+ 0.1 * y ** 2
+        dist_penalty = self._dist_pen * x**2 #+ 0.1*y**2 + 0.1*z**2 # FIXME: y and z not considered
         y_angle_penalty = self._y_angle_pen * (y_angle ** 2)
+        # FIXME: z is not measured in the worldframe - no issue when upright but should be looked into
+        z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
+        # FIXME: x_angle not considered
 
         # x velocity and y angle velocity penalties:
         x_vel_penalty = self._x_vel_pen * x_vel ** 2  # avoid too much movement in y
@@ -178,9 +179,6 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         wheel_l_penalty = self._wheel_speed_pen * wheel_speed_l ** 2
         wheel_r_penalty = self._wheel_speed_pen * wheel_speed_r ** 2
-
-        # FIXME: z is not measured in the worldframe - no issue when upright but should be looked into
-        z_angle_penalty = self._z_angle_pen * (z_angle ** 2)
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
