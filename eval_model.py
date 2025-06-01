@@ -88,8 +88,9 @@ def main():
             for step in range(500):
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
-                rew += reward
+                rew += reward  # Accumulate reward over the episode
 
+                # Handle vectorized environments or non-scalar outputs
                 reward_scalar = reward[0] if isinstance(reward, (list, np.ndarray)) else reward
                 info_dict = info[0] if isinstance(info, list) else info
                 obs_array = obs[0] if isinstance(obs, np.ndarray) else obs
@@ -99,16 +100,16 @@ def main():
                 row = {"step": step, "reward": reward_scalar,}
                 #row.update({f"obs_{i}": val for i, val in enumerate(obs_array)})  # no names = bad
                 row.update({
-                    "x": obs_array[0],
-                    "y": obs_array[1],
-                    "z": obs_array[2],  # FIXME: stimmt das?
-                    "x_angle": obs_array[3],  # FIXME: stimmt das?
-                    "y_angle": obs_array[4],
-                    "z_angle": obs_array[5],
-                    "wheel_speed_l": obs_array[6],
-                    "wheel_speed_r": obs_array[7],
-                    "x_vel": obs_array[8],
-                    "y_angle_vel": obs_array[9]
+                    "x": obs_array[0],              # x position
+                    "y": obs_array[1],              # y position
+                    "z": obs_array[2],              # z position (TODO: wirklich?)
+                    "x_angle": obs_array[3],        # angle around x-axis (TODO: wirklich?)
+                    "y_angle": obs_array[4],        # angle around y-axis
+                    "z_angle": obs_array[5],        # angle around z-axis
+                    "wheel_speed_l": obs_array[6],  # Left wheel rotational speed
+                    "wheel_speed_r": obs_array[7],  # Right wheel rotational speed
+                    "x_vel": obs_array[8],          # Linear velocity in x-direction
+                    "y_angle_vel": obs_array[9],    # Angular velocity around y-axis
                 })
                 row.update({f"action_{i}": val for i, val in enumerate(action_array)})  # TODO: name correctly; "wheel
                 # activation?"
