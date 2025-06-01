@@ -121,7 +121,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             **kwargs,
         )
 
-        self.action_space = Box(low=-100, high=100, shape=(2,), dtype=np.float32)
+        self.action_space = Box(low=-10, high=10, shape=(2,), dtype=np.float32)
 
         self.metadata = {
             "render_modes": [
