@@ -141,7 +141,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         action = np.concatenate([self._height_actor_action, action], axis=0)
         self.do_simulation(action, self.frame_skip)
         if self._step_count == self._first_disturbance:
-            self.data.xfrc_applied [1,0]= self.np_random.uniform(-self._max_disturbance, self._max_disturbance)
+            self.data.xfrc_applied [1,0]= self._difficulty * self.np_random.uniform(-self._max_disturbance, self._max_disturbance)
         if self._step_count == self._first_disturbance + self._duration_disturbance:
             self.data.xfrc_applied[1, 0] = 0.0
 
