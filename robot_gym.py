@@ -182,7 +182,14 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
-        reward = alive_bonus - dist_penalty - y_angle_penalty - wheel_l_penalty - wheel_r_penalty - z_angle_penalty - y_angle_vel_penalty - x_vel_penalty
+        reward = (alive_bonus
+                  - dist_penalty
+                  - y_angle_penalty
+                  - wheel_l_penalty
+                  - wheel_r_penalty
+                  - z_angle_penalty
+                  - y_angle_vel_penalty
+                  - x_vel_penalty)
 
         reward_info = {
             "reward_survive": alive_bonus,
