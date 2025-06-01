@@ -72,6 +72,9 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
                         difficulty_start = config['difficulty_start'],
                         x_vel_pen=config['x_vel_pen'],
                         y_angle_vel_pen=config['y_angle_vel_pen'],
+                        duration_disturbance=config['duration_disturbance'],
+                        first_disturbance=config['first_disturbance'],
+                        max_disturbance=config['max_disturbance'],
                         )
         env.reset(seed=seed + rank)
         return env

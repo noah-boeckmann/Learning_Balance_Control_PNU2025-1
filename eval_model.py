@@ -25,6 +25,7 @@ def parse_args():
 def main():
     args = parse_args()
     file_path = args.train_file
+    #file_path = r".\trained_models\5deg_dist_rigid_policy.zip"
     base_path = os.path.dirname(file_path)
     config = None
     policy_file = None
@@ -43,6 +44,9 @@ def main():
             config['rigid'] = False
             config['max_angle'] = 10
             config['height_level'] = 1.0
+            config['duration_disturbance'] = 5
+            config['first_disturbance'] = 100
+            config['max_disturbance'] = 100
 
             if not os.path.exists(policy_file):
                 raise FileNotFoundError("Policy file not found")
@@ -59,6 +63,10 @@ def main():
                             rigid = config['rigid'],
                             max_angle = config['max_angle'],
                             height_level = config['height_level'],
+                            duration_disturbance=config['duration_disturbance'],
+                            first_disturbance=config['first_disturbance'],
+                            max_disturbance=config['max_disturbance'],
+
                             difficulty_start = 1.0,
                             frame_skip=1, width=1000, height=1000)])
 

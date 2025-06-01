@@ -79,6 +79,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         rigid: bool = False,
         height_level: float = 1.0,
         difficulty_start: float = 0.0,
+        max_disturbance: float = 0.0,
+        first_disturbance: float = 0.0,
+        duration_disturbance: float = 0.0,
         eval: bool = False,
 
 
@@ -105,6 +108,10 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         self._eval = eval
 
+        self._step_count = 0
+        self._max_disturbance = max_disturbance
+        self._first_disturbance = first_disturbance
+        self._duration_disturbance = duration_disturbance
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
@@ -133,6 +140,13 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         action = np.concatenate([self._height_actor_action, action], axis=0)
         self.do_simulation(action, self.frame_skip)
+        if self._step_count == self._first_disturbance:
+            self.data.xfrc_applied [1,0]= self.np_random.uniform(-self._max_disturbance, self._max_disturbance)
+        if self._step_count == self._first_disturbance + self._duration_disturbance:
+            self.data.xfrc_applied[1, 0] = 0.0
+
+#  ab wann wird kraft angewandt, wie lange, wie hoch maximal+mit difficulty skalieren
+        self._step_count = self._step_count + 1
 
         observation = self._get_obs()
         y_angle = observation[4]
@@ -215,6 +229,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     def reset_model(self):
         # TODO: introduce z angle noise?
+        self._step_count = 0
 
         if self._eval:
             angle = self._max_angle
