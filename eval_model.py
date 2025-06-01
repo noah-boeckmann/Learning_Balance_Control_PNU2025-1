@@ -5,6 +5,8 @@ import time
 
 import gymnasium as gym
 import yaml
+import numpy as np
+import pandas as pd
 
 import robot_gym
 from stable_baselines3 import PPO, SAC
@@ -77,13 +79,42 @@ def main():
         while True:
             obs = env.reset()
             rew = 0
-            for _ in range(100):
+            logs = []
+
+            for _ in range(30):
                 env.render()
-                time.sleep(0.01)
-            for _ in range(500):
+                time.sleep(0.1)
+
+            for step in range(500):
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
                 rew += reward
+
+                reward_scalar = reward[0] if isinstance(reward, (list, np.ndarray)) else reward
+                info_dict = info[0] if isinstance(info, list) else info
+                obs_array = obs[0] if isinstance(obs, np.ndarray) else obs
+                action_array = action[0] if isinstance(action, np.ndarray) else action
+
+                # log per-step data
+                row = {"step": step, "reward": reward_scalar,}
+                #row.update({f"obs_{i}": val for i, val in enumerate(obs_array)})  # no names = bad
+                row.update({
+                    "x": obs_array[0],
+                    "y": obs_array[1],
+                    "z": obs_array[2],  # FIXME: stimmt das?
+                    "x_angle": obs_array[3],  # FIXME: stimmt das?
+                    "y_angle": obs_array[4],
+                    "z_angle": obs_array[5],
+                    "wheel_speed_l": obs_array[6],
+                    "wheel_speed_r": obs_array[7],
+                    "x_vel": obs_array[8],
+                    "y_angle_vel": obs_array[9]
+                })
+                row.update({f"action_{i}": val for i, val in enumerate(action_array)})  # TODO: name correctly; "wheel
+                # activation?"
+                row.update({k: float(v) if isinstance(v, np.generic) else v for k, v in info_dict.items()})
+
+                logs.append(row)
 
                 if args.info == "rew":
                     print("Reward: " + str(reward) + " | "+ str(info))
@@ -96,16 +127,23 @@ def main():
                     print("Action: " + str(action))
                     print("Obs: " + str(obs))
 
-                time.sleep(0.01)
+                time.sleep(0.0005)
                 if done:
                     print(rew)
                     time.sleep(5)
                     break
 
+            # Save the logs of that episode (warning: overwrites old logs)
+            df = pd.DataFrame(logs)
+            df.to_csv("eval_logs/eval_log.csv", index=False)
+            print("Saved eval_log.csv with shape:", df.shape)
+
     except KeyboardInterrupt:
         print("Exiting...")
         env.close()
         exit(0)
+
+
 
 if __name__ == '__main__':
     main()
