@@ -158,9 +158,8 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         self._max_angle = angle
 
     def _get_rew(self, observation, terminated):
-        x, y = observation[0], observation[1]
-        y_angle = observation[4]
-        z_angle = observation[5]
+        x, y, z = observation[0], observation[1], observation[2]  # only use x
+        x_angle, y_angle, z_angle = observation[1], observation[4], observation[5]  # only use y_angle z_angle
 
         # x velocity and y angle velocity sensors
         x_vel = observation[8]  # Velocity in x-axis direction
@@ -211,8 +210,10 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x_vel = self.data.sensordata[5]
         sensordata = [wheel_sp_l, wheel_sp_r, x_vel, y_angle_vel]
 
-        return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, sensordata])
+        # bot pos [0,1,2] + angle [4,5,6] + wheel speed [6,7] + x_vel, y_angle_vel [8,9]
+
+        return np.concatenate([self.data.xpos[1], euler, sensordata])
+
 
     def reset_model(self):
         # TODO: introduce z angle noise?
