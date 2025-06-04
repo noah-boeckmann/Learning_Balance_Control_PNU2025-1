@@ -20,13 +20,25 @@ learning_rate: 0.0003
 
 
 # Reward setup
-healthy_reward: 20
-y_angle_pen: 0.1
-z_angle_pen: 0.1
-dist_pen: 100.0
-wheel_speed_pen: 0.5
-x_vel_pen: 1
-y_angle_vel_pen: 0.5
+healthy_reward: 1
+
+y_angle_pen: 0.2
+y_angle_scale: 1.0
+
+z_angle_pen: 0.025
+z_angle_scale: 1.0
+
+dist_pen: 0.2
+dist_scale: 15.0
+
+wheel_speed_pen: 0.1
+wheel_speed_scale: 1.0
+
+x_vel_pen: 0.45
+x_vel_scale: 15.0
+
+y_angle_vel_pen: 0.025
+y_angle_vel_scale: 1.0
 
 # Angle and height settings
 max_angle: 5.0
