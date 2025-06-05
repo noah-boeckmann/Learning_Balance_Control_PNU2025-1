@@ -24,7 +24,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     ## Action Space
     The agent take a 1-element vector for actions.
-    The action space is a continuous `(action)` in `[-1000, 1000]`, where `action` represents the
+    The action space is a continuous `(action)` in `[-10, 10]`, where `action` represents the
     numerical torque applied to the robots wheels (with magnitude representing the amount of torque and
     sign representing the direction)
 
@@ -40,6 +40,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     - Position values of the robot's centerpoint [3 Elements]
     - Euler angle of the robot with regard to the world frame [3 Elements]
     - Wheel turning velocities L & R [2 Elements]
+    - Translational X speed and angular velocity around the y-axis
 
     The observation space is a `Box(-Inf, Inf, (8,), float64)` where the elements are as follows:
     | Num | Observation                                                       | Min  | Max | Type (Unit)               |
@@ -53,7 +54,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 8   | Velocity of box in X                                              | -Inf | Inf | vel (m/s)                 |
-    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)    |
+    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)         |
 
     """
 
@@ -156,14 +157,19 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     def step(self, action):
 
         action = np.concatenate([self._height_actor_action, action], axis=0)
-        self.do_simulation(action, self.frame_skip)
+
+        # first_disturbance defines the first timestep with force application
         if self._step_count == self._first_disturbance:
-            self.data.xfrc_applied [1,0]= self._difficulty * self.np_random.uniform(-self._max_disturbance, self._max_disturbance)
+            # The force is applied in the middle of the main bots body. Scaled with the current difficulty.
+            disturbance = self._max_disturbance * self._difficulty
+            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, disturbance]) if not self._eval else disturbance
         if self._step_count == self._first_disturbance + self._duration_disturbance:
+            # Stop applying the force
             self.data.xfrc_applied[1, 0] = 0.0
 
-#  ab wann wird kraft angewandt, wie lange, wie hoch maximal+mit difficulty skalieren
         self._step_count = self._step_count + 1
+
+        self.do_simulation(action, self.frame_skip)
 
         observation = self._get_obs()
         y_angle = observation[4]

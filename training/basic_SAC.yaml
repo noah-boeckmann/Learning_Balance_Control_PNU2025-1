@@ -45,6 +45,11 @@ max_angle: 5.0
 rigid: False
 height_level: 1.0
 
+# Force perturbation settings
+first_disturbance: 100
+duration_disturbance: 5
+max_disturbance: 100 # in N
+
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
 
 # difficulty_schedule: "lin"  # grad * (x + x_offset)
