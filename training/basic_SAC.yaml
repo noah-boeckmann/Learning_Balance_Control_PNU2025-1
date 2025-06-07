@@ -7,14 +7,14 @@ warmup: ""
 max_ep_steps: 512
 frame_skip: 1
 
-buffer_size: 1_024
+buffer_size: 300_000
 batch_size: 256
-learning_starts: 1_024
+learning_starts: 100_000
 
-total_timesteps: 100_000
+total_timesteps: 10_000_000
 save_interval: 1_000_000
 eval_freq: 500_000
-n_eval_ep: 10
+n_eval_ep: 100
 
 learning_rate: 0.0003
 
@@ -41,12 +41,12 @@ y_angle_vel_pen: 0.025
 y_angle_vel_scale: 1.0
 
 # Angle and height settings
-max_angle: 5.0
+max_angle: 10.0
 rigid: False
 height_level: 1.0
 
 # Force perturbation settings
-first_disturbance: 100
+first_disturbance: 200
 duration_disturbance: 5
 max_disturbance: 100 # in N
 
