@@ -42,9 +42,9 @@ rigid: False
 height_level: 1.0
 
 # Force perturbation settings
-first_disturbance: 200
-duration_disturbance: 5
-max_disturbance: 100 # in N
+first_disturbance: 512
+duration_disturbance: 0
+max_disturbance: 0 # in N
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
 
