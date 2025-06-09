@@ -46,6 +46,7 @@ def main():
             config['height_level'] = 1.0
             config['duration_disturbance'] = 5
             config['first_disturbance'] = 100
+            config['disturbance_window'] = 1.5
             config['max_disturbance'] = 100
 
             config['healthy_reward'] = 1
@@ -92,6 +93,7 @@ def main():
                             height_level = config['height_level'],
                             duration_disturbance=config['duration_disturbance'],
                             first_disturbance=config['first_disturbance'],
+                            disturbance_window=config['disturbance_window'],
                             max_disturbance=config['max_disturbance'],
 
                             difficulty_start = 1.0,

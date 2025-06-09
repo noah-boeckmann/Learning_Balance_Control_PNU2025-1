@@ -90,8 +90,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         height_level: float = 1.0,
         difficulty_start: float = 0.0,
         max_disturbance: float = 0.0,
-        first_disturbance: float = 0.0,
-        duration_disturbance: float = 0.0,
+        first_disturbance: int = 0.0,
+        disturbance_window: float = 1.5,
+        duration_disturbance: int = 0.0,
         eval: bool = False,
 
 
@@ -128,7 +129,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         self._step_count = 0
         self._max_disturbance = max_disturbance
-        self._first_disturbance = first_disturbance
+        self._earliest_disturbance = first_disturbance
+        self._disturbance_window = disturbance_window
+        self._first_disturbance = 0
         self._duration_disturbance = duration_disturbance
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
@@ -268,6 +271,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
             # set a random height level if not rigid
             if not self._rigid: self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+
+            # randomly offset the first disturbance to improve response
+            self._first_disturbance = np.round(self.np_random.uniform(self._earliest_disturbance, self._earliest_disturbance * self._disturbance_window))
 
         self._bot_height, beta = self.calculate_reset_hinge_angles()
         angle = angle * np.pi / 180
