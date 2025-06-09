@@ -26,7 +26,6 @@ def parse_args():
 def main():
     args = parse_args()
     file_path = args.train_file
-    #file_path = r".\trained_models\5deg_dist_rigid_policy.zip"
     base_path = os.path.dirname(file_path)
     config = None
     policy_file = None
@@ -49,6 +48,20 @@ def main():
             config['first_disturbance'] = 100
             config['max_disturbance'] = 100
 
+            config['healthy_reward'] = 1
+            config['y_angle_pen'] = 0.2
+            config['y_angle_scale'] = 1.0
+            config['z_angle_pen'] = 0.025
+            config['z_angle_scale'] = 1.0
+            config['dist_pen'] = 0.2
+            config['dist_scale'] = 15.0
+            config['wheel_speed_pen'] = 0.1
+            config['wheel_speed_scale'] = 1.0
+            config['x_vel_pen'] = 0.45
+            config['x_vel_scale'] = 15.0
+            config['y_angle_vel_pen'] = 0.025
+            config['y_angle_vel_scale'] = 1.0
+
             if not os.path.exists(policy_file):
                 raise FileNotFoundError("Policy file not found")
 
@@ -60,7 +73,20 @@ def main():
     env = DummyVecEnv([lambda: gym.make('WheelBot',
                             xml_file="./bot_model/wheelbot.xml",
                             render_mode="human",
-                            eval = False, # yes, this is weird. We want to see random starting positions here
+                            healthy_reward=config['healthy_reward'],
+                            y_angle_pen=config['y_angle_pen'],
+                            y_angle_scale=config['y_angle_scale'],
+                            z_angle_pen=config['z_angle_pen'],
+                            z_angle_scale=config['z_angle_scale'],
+                            dist_pen=config['dist_pen'],
+                            dist_scale=config['dist_scale'],
+                            wheel_speed_pen=config['wheel_speed_pen'],
+                            wheel_speed_scale=config['wheel_speed_scale'],
+                            x_vel_pen=config['x_vel_pen'],
+                            x_vel_scale=config['x_vel_scale'],
+                            y_angle_vel_pen=config['y_angle_vel_pen'],
+                            y_angle_vel_scale=config['y_angle_vel_scale'],
+                            eval = False,
                             rigid = config['rigid'],
                             max_angle = config['max_angle'],
                             height_level = config['height_level'],
