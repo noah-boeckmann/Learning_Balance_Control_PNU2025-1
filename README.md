@@ -3,7 +3,16 @@
 This is the project repository for our course "Artificial Intelligence in Robotics"
 at the Pusan National University, South Korea.
 
-## Goal
+## Content
+1. Introduction
+2. Physics Simulation
+3. Training
+4. Approach
+5. Achievements
+
+
+
+## Introduction
 
 The idea for the project came from the following paper:
 [Balance Control of a Novel Wheel-legged Robot: Design and Experiments](https://ieeexplore.ieee.org/document/9561579)
@@ -19,7 +28,8 @@ robot state. ✅
 changing height. 🔜
 4. Improving the controller further by introducing perturbations such as shifting the center of gravity. 🔜
 
-## Model
+## Physics Simulation
+
 
 We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
 of the papers pictures and Table I:
@@ -27,7 +37,11 @@ of the papers pictures and Table I:
 ![bot geometry](bot_model/bot_geometry.png)
 ![bot model](bot_model/bot_model.png)
 
-## Results
+## Training
+
+## Approach
+
+## Achievements
 
 We were able to train a basic policy for the robot with no height change and no other perturbations:
 [Basic Rigid Policy](trained_model/basic_rigid_policy.zip)
