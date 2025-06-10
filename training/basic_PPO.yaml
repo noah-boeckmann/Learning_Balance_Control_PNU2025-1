@@ -3,31 +3,49 @@ algo: "PPO"
 policy: MlpPolicy
 
 # Step settings
-n_steps: 2048
-max_ep_steps: 2048
+n_steps: 1024
+max_ep_steps: 512
 frame_skip: 1
 
-total_timesteps: 100_000
-save_interval: 50_000
-eval_freq: 25_000
-n_eval_ep: 10
+total_timesteps: 10_000_000
+save_interval: 1_000_000
+eval_freq: 500_000
+n_eval_ep: 100
 
 learning_rate: 0.0003
 
 
 # Reward setup
-healthy_reward: 20
-y_angle_pen: 0.1
-z_angle_pen: 0.1
-dist_pen: 100.0
-wheel_speed_pen: 0.5
-x_vel_pen: 1
-y_angle_vel_pen: 0.5
+healthy_reward: 1
+
+y_angle_pen: 0.2
+y_angle_scale: 1.0
+
+z_angle_pen: 0.025
+z_angle_scale: 1.0
+
+dist_pen: 0.2
+dist_scale: 15.0
+
+wheel_speed_pen: 0.1
+wheel_speed_scale: 1.0
+
+x_vel_pen: 0.45
+x_vel_scale: 15.0
+
+y_angle_vel_pen: 0.025
+y_angle_vel_scale: 1.0
 
 # Angle and height settings
-max_angle: 5.0
+max_angle: 10.0
 rigid: False
 height_level: 1.0
+
+# Force perturbation settings
+first_disturbance: 100
+disturbance_window: 1.5
+duration_disturbance: 0
+max_disturbance: 0 # in N
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
 

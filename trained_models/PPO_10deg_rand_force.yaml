@@ -1,17 +1,13 @@
 # Test Training
-algo: "SAC"
+algo: "PPO"
 policy: MlpPolicy
-warmup: ""
 
 # Step settings
+n_steps: 1024
 max_ep_steps: 512
 frame_skip: 1
 
-buffer_size: 300_000
-batch_size: 256
-learning_starts: 100_000
-
-total_timesteps: 10_000_000
+total_timesteps: 20_000_000
 save_interval: 1_000_000
 eval_freq: 500_000
 n_eval_ep: 100
@@ -48,6 +44,7 @@ height_level: 1.0
 # Force perturbation settings
 first_disturbance: 200
 duration_disturbance: 5
+disturbance_window: 1.5
 max_disturbance: 100 # in N
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
