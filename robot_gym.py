@@ -209,7 +209,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
 
-        dist_penalty = self._x_vel_pen * bounded_penalty(x, self._dist_scale)
+        dist_penalty = self._dist_pen * bounded_penalty(x, self._dist_scale)
         y_angle_penalty = self._y_angle_pen * bounded_penalty(y_angle, self._y_angle_scale)
         wheel_l_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
         wheel_r_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
