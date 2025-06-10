@@ -121,7 +121,7 @@ def main():
             for _ in range(100):
                 env.render()
                 time.sleep(0.01)
-            for _ in range(args.length):
+            for step in range(args.length):
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
                 rew += reward  # Accumulate reward over the episode
