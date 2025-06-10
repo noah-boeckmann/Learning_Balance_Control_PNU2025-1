@@ -78,6 +78,10 @@ def make_env(rank, config:dict, seed=0, render_mode=None):
                         rigid = config['rigid'],
                         height_level = config['height_level'],
                         difficulty_start = config['difficulty_start'],
+                        duration_disturbance=config['duration_disturbance'],
+                        first_disturbance=config['first_disturbance'],
+                        disturbance_window=config['disturbance_window'],
+                        max_disturbance=config['max_disturbance'],
                         )
         env.reset(seed=seed + rank)
         return env

@@ -24,7 +24,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
     ## Action Space
     The agent take a 1-element vector for actions.
-    The action space is a continuous `(action)` in `[-1000, 1000]`, where `action` represents the
+    The action space is a continuous `(action)` in `[-10, 10]`, where `action` represents the
     numerical torque applied to the robots wheels (with magnitude representing the amount of torque and
     sign representing the direction)
 
@@ -40,6 +40,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     - Position values of the robot's centerpoint [3 Elements]
     - Euler angle of the robot with regard to the world frame [3 Elements]
     - Wheel turning velocities L & R [2 Elements]
+    - Translational X speed and angular velocity around the y-axis
 
     The observation space is a `Box(-Inf, Inf, (8,), float64)` where the elements are as follows:
     | Num | Observation                                                       | Min  | Max | Type (Unit)               |
@@ -53,7 +54,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     | 6   | Wheel L rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 7   | Wheel R rotational speed                                          | -Inf | Inf | angle vel (deg)           |
     | 8   | Velocity of box in X                                              | -Inf | Inf | vel (m/s)                 |
-    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)    |
+    | 9   | Angle velocity of box around y-axis                               | -Inf | Inf | angle vel (rad/s)         |
 
     """
 
@@ -88,6 +89,10 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         rigid: bool = False,
         height_level: float = 1.0,
         difficulty_start: float = 0.0,
+        max_disturbance: float = 0.0,
+        first_disturbance: int = 0.0,
+        disturbance_window: float = 1.5,
+        duration_disturbance: int = 0.0,
         eval: bool = False,
 
 
@@ -122,6 +127,12 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         self._eval = eval
 
+        self._step_count = 0
+        self._max_disturbance = max_disturbance
+        self._earliest_disturbance = first_disturbance
+        self._disturbance_window = disturbance_window
+        self._first_disturbance = 0
+        self._duration_disturbance = duration_disturbance
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64)
 
@@ -149,6 +160,18 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     def step(self, action):
 
         action = np.concatenate([self._height_actor_action, action], axis=0)
+
+        # first_disturbance defines the first timestep with force application
+        if self._step_count == self._first_disturbance:
+            # The force is applied in the middle of the main bots body. Scaled with the current difficulty.
+            disturbance = self._max_disturbance * self._difficulty
+            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, disturbance]) if not self._eval else disturbance
+        if self._step_count == self._first_disturbance + self._duration_disturbance:
+            # Stop applying the force
+            self.data.xfrc_applied[1, 0] = 0.0
+
+        self._step_count = self._step_count + 1
+
         self.do_simulation(action, self.frame_skip)
 
         observation = self._get_obs()
@@ -235,6 +258,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 euler, sensordata])
 
     def reset_model(self):
+        self._step_count = 0
 
         if self._eval:
             angle = self._max_angle
@@ -247,6 +271,9 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
             # set a random height level if not rigid
             if not self._rigid: self.set_height_level(self.np_random.uniform(1 - self._difficulty, 1.0))
+
+            # randomly offset the first disturbance to improve response
+            self._first_disturbance = np.round(self.np_random.uniform(self._earliest_disturbance, self._earliest_disturbance * self._disturbance_window))
 
         self._bot_height, beta = self.calculate_reset_hinge_angles()
         angle = angle * np.pi / 180
