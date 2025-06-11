@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--info', type=str, choices=["none", "rew", "act", "obs", "all"], default="rew",
                         help="Which type of information to output to console")
     parser.add_argument('--length', type=int, default=512, help="Length per episode")
+    parser.add_argument('--deterministic', type=bool, default=False, help="Use deterministic environment")
     return parser.parse_args()
 
 
@@ -91,7 +92,7 @@ def main():
                             x_vel_scale=config['x_vel_scale'],
                             y_angle_vel_pen=config['y_angle_vel_pen'],
                             y_angle_vel_scale=config['y_angle_vel_scale'],
-                            eval = False,
+                            eval = args.deterministic,
                             rigid = config['rigid'],
                             max_angle = config['max_angle'],
                             height_level = config['height_level'],

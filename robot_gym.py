@@ -165,7 +165,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         if self._step_count == self._first_disturbance:
             # The force is applied in the middle of the main bots body. Scaled with the current difficulty.
             disturbance = self._max_disturbance * self._difficulty
-            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, disturbance]) if not self._eval else disturbance
+            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, 0, disturbance]) if not self._eval else disturbance
         if self._step_count == self._first_disturbance + self._duration_disturbance:
             # Stop applying the force
             self.data.xfrc_applied[1, 0] = 0.0
@@ -263,6 +263,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
         if self._eval:
             angle = self._max_angle
+            self._first_disturbance = self._earliest_disturbance
 
         else:
             # generate a random starting angle
