@@ -18,7 +18,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train PPO on WheelBot Environment")
+    parser = argparse.ArgumentParser(description="Train a policy on the WheelBot Environment")
 
     # Add hyperparameters you want to control from command line
     parser.add_argument('train_file', type=str, help="Path to YAML config file of the training")

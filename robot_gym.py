@@ -23,7 +23,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
 
     ## Action Space
-    The agent take a 1-element vector for actions.
+    The agent takes a 2-element vector for actions.
     The action space is a continuous `(action)` in `[-10, 10]`, where `action` represents the
     numerical torque applied to the robots wheels (with magnitude representing the amount of torque and
     sign representing the direction)
