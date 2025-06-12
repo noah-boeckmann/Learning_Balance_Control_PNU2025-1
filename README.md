@@ -124,7 +124,7 @@ where $s$ scales the "slope" of the function and is used to adjust to the common
 ![bounding function](README_figures/bounding_function.jpg)
 
 When we then specify, that $\sum_i \lambda_i = 1$ and $c_\text{alive_bonus} \in [0, 1]$, our reward
-is bounded above by $1$
+is bounded above by $`1`$
 $$
 \text{reward} = c_\text{alive bonus} -
 \lambda_{\theta_y} f(\theta_y) -
@@ -146,10 +146,7 @@ We were able to train a basic policy for the robot with no height change and no 
 
 
 
-$$
-\text{reward} = \text{alive_bonus} - 0.1 * \text{y_angle}^2 - 0.1 * 
-\text{x_angle}^2 - 0.5 * (\text{wheel_speed_l}^2 +
-\text{wheel_speed_r}^2) - 10 * \text{x_dist}
-$$
+$$`\text{reward} = \text{alive_bonus} - 0.1 * \text{y_angle}^2 - 0.1 * \text{x_angle}^2 - 0.5 * (\text{wheel_speed_l}
+^2 + \text{wheel_speed_r}^2) - 10 * \text{x_dist}`$$
 
 
