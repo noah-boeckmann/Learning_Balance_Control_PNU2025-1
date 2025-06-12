@@ -83,7 +83,7 @@ The general training process is as follows:
 
 #### Curriculum Learning
 The curriculum learning callback calculates a difficulty scalar $[0, 1]$ depending on
-the current training step progress $`x := \dfrac{n_{step}}{N_{step}}`$ and sets the
+the current training step progress $`x := \frac{n_{step}}{N_{step}}`$ and sets the
 difficulty in the environment(s). The difficulty function can be configured, the
 default is a sigmoid function $\sigma(x)$ which showed the best results during our trainings.
 We introduce two tuning parameters here:
@@ -93,6 +93,7 @@ Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at 
 $`
 \sigma(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}
 `$
+
 ![curricullum learning](README_figures/curriculum_learning.jpg)
 
 
