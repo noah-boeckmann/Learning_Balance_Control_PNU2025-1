@@ -150,6 +150,7 @@ def main():
                 })
                 row.update({f"action_{i}": val for i, val in enumerate(action_array)})  # TODO: name correctly; "wheel
                 # activation?"
+                # Individual rewards (already penalized with the penalty factor i [0,1])
                 row.update({k: float(v) if isinstance(v, np.generic) else v for k, v in info_dict.items()})
 
                 logs.append(row)

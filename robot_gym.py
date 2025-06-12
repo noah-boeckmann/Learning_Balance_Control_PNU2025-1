@@ -209,13 +209,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
 
-        dist_penalty = self._dist_pen * bounded_penalty(x, self._dist_scale)
-        y_angle_penalty = self._y_angle_pen * bounded_penalty(y_angle, self._y_angle_scale)
-        wheel_l_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
-        wheel_r_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
-        z_angle_penalty = self._z_angle_pen * bounded_penalty(z_angle, self._z_angle_scale)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
-        x_vel_penalty = self._x_vel_pen * bounded_penalty(x_vel, self._x_vel_scale)
-        y_angle_vel_penalty = self._y_angle_vel_pen * bounded_penalty(y_angle_vel, self._y_angle_vel_scale)
+        bounded_dist = bounded_penalty(x, self._dist_scale)
+        bounded_y_angle = bounded_penalty(y_angle, self._y_angle_scale)
+        bounded_wheel_l = bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
+        bounded_wheel_r = bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
+        bounded_z_angle = bounded_penalty(z_angle,self._z_angle_scale)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
+        bounded_x_vel = bounded_penalty(x_vel, self._x_vel_scale)
+        bounded_y_angle_vel =  bounded_penalty(y_angle_vel, self._y_angle_vel_scale)
+
+        dist_penalty = self._dist_pen * bounded_dist
+        y_angle_penalty = self._y_angle_pen * bounded_y_angle
+        wheel_l_penalty = self._wheel_speed_pen * bounded_wheel_l
+        wheel_r_penalty = self._wheel_speed_pen * bounded_wheel_r
+        z_angle_penalty = self._z_angle_pen * bounded_z_angle
+        x_vel_penalty = self._x_vel_pen * bounded_x_vel
+        y_angle_vel_penalty = self._y_angle_vel_pen * bounded_y_angle_vel
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
@@ -237,8 +245,16 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
-            "y_angle_vel_penalty": -y_angle_vel_penalty,
             "x_vel_penalty": -x_vel_penalty,
+            "y_angle_vel_penalty": -y_angle_vel_penalty,
+
+            "bounded_dist": - bounded_dist,
+            "bounded_y_angle": - bounded_y_angle,
+            "bounded_wheel_l": - bounded_wheel_l,
+            "bounded_wheel_r": - bounded_wheel_r,
+            "bounded_z_angle": - bounded_z_angle,
+            "bounded_x_vel": - bounded_x_vel,
+            "bounded_y_angle_vel": - bounded_y_angle_vel,
         }
 
         return reward, reward_info
