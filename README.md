@@ -89,50 +89,55 @@ default is a sigmoid function $\sigma(x)$ which showed the best results during o
 We introduce two tuning parameters here:
 $g$ controls the slope or growth and $x_\text{offset}$ shifts horizontally.
 Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at the $y$-intercept.
-$$
+
+$`
 \sigma(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}
-$$
+`$
 ![curricullum learning](README_figures/curriculum_learning.jpg)
 
 
 #### Reward Function
 At first we tried a simple reward function that uses the square of the measured sensor data 
 $(\cdot)^2$ (to make sure the result is positive and smooth) together with a corresponding 
-customizable penalizing factor $\lambda_{(\cdot)}$. 
-This was combined with a constant bonus $c_\text{alive bonus}$ if the robot is *alive*.
+customizable penalizing factor $`\lambda_{(\cdot)}`$. 
+This was combined with a constant bonus $`c_\text{alive bonus}`$ if the robot is *alive*.
 
 #TODO war hier x wirklich linear?
-$$
+
+$`
 \text{reward} = c_\text{alive bonus} -
 \lambda_{\theta_y} {\theta_y}^2 -
 \lambda_{\theta_x} {\theta_x}^2 -
 \lambda_{\dot \theta_\text{wheel}}\left( {\dot\theta_\text{left wheel}}^2 + {\dot\theta_\text{right wheel}}^2 \right) -
 \lambda_{x} x^2
-$$
+`$
 
 But in an effort to bound the reward for more consistent training with SAC in particular,
 we introduced a function $f$ which makes use of the sigmoid function $\sigma(x)$ and bounds
 each of our measured sensor data between $[0,1]$
-$$
+
+$`
 \begin{align}
 f(x) &= 2 \, \sigma(s|x|) - 1 \\
      &= \dfrac{2}{1 + e^{-s|x|}} - 1
 \end{align}
-$$
-where $s$ scales the "slope" of the function and is used to adjust to the common range of $x$.
+`$
+
+where $`s`$ scales the "slope" of the function and is used to adjust to the common range of $`x`$.
 
 ![bounding function](README_figures/bounding_function.jpg)
 
-When we then specify, that $\sum_i \lambda_i = 1$ and $c_\text{alive_bonus} \in [0, 1]$, our reward
+When we then specify, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive\_bonus} \in [0, 1]`$, our reward
 is bounded above by $`1`$
-$$
+
+$`
 \text{reward} = c_\text{alive bonus} -
 \lambda_{\theta_y} f(\theta_y) -
 \lambda_{\theta_x} f(\theta_x) -
 \lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{left wheel}\bigr) +
 \lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{right wheel}\bigr) -
 \lambda_{x} f(x) \leq 1
-$
+`$
 
 
 
@@ -145,8 +150,8 @@ We were able to train a basic policy for the robot with no height change and no 
 ![basic rigid policy](trained_models/basic_rigid_policy.png)
 
 $`
-\text{reward} = \text{alive\_bonus} - 0.1 * \text{y\_angle}^2 - 0.1 * \text{x\_angle}^2 - 0.5 * (\text
-{wheel\_speed\_l}^2 + \text{wheel\_speed\_r}^2) - 10 * \text{x\_dist}
+\text{reward} = \text{alive\_bonus} - 0.1 * \text{y\_angle}^2 - 0.1 * \text{x\_angle}^2 - 
+0.5 * (\text{wheel\_speed\_l}^2 + \text{wheel\_speed\_r}^2) - 10 * \text{x\_dist}
 `$
 
 
