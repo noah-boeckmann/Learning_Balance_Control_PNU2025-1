@@ -143,10 +143,7 @@ $$
 We were able to train a basic policy for the robot with no height change and no other perturbations:
 [Basic Rigid Policy](trained_model/basic_rigid_policy.zip)
 ![basic rigid policy](trained_models/basic_rigid_policy.png)
-
-
-
-$\text{reward} = \text{alive_bonus} - 0.1 * \text{y_angle}^2 - 0.1 * \text{x_angle}^2 - 0.5 * (\text{wheel_speed_l}
-^2 + \text{wheel_speed_r}^2) - 10 * \text{x_dist}$
+$`\text{reward} = \text{alive_bonus} - 0.1 * \text{y_angle}^2 - 0.1 * \text{x_angle}^2 - 0.5 * (\text{wheel_speed_l}
+^2 + \text{wheel_speed_r}^2) - 10 * \text{x_dist}`$
 
 
