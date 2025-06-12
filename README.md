@@ -129,8 +129,8 @@ $$
 \text{reward} = c_\text{alive bonus} -
 \lambda_{\theta_y} f(\theta_y) -
 \lambda_{\theta_x} f(\theta_x) -
-\lambda_{\dot \theta_\text{wheel}}\left( f\bigl(\dot\theta_\text{left wheel}\bigr) +
-f\bigl(\dot\theta_\text{right wheel}\bigr) \right) -
+\lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{left wheel}\bigr) +
+\lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{right wheel}\bigr) -
 \lambda_{x} f(x) \leq 1
 $$
 
