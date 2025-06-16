@@ -155,4 +155,47 @@ $`
 0.5 * (\text{wheel\_speed\_l}^2 + \text{wheel\_speed\_r}^2) - 10 * \text{x\_dist}
 `$
 
+### Training with angle and force perturbation
+Through experimenting we achieved the following [configuration](./trained_models/PPO_10deg_rand_force_6.yaml).
+The reward function ignores the distance from zero (positioning is considered a higher level control problem) and y-angle velocity. Heavy emphasis is laid on the x speed to avoid big movements. The wheel speed penalty
+mitigates oscillations.
+
+```
+# Reward setup
+healthy_reward: 1
+
+y_angle_pen: 0.15
+y_angle_scale: 0.5
+
+z_angle_pen: 0.1
+z_angle_scale: 1.5
+
+dist_pen: 0.0
+dist_scale: 15.0
+
+wheel_speed_pen: 0.125
+wheel_speed_scale: 0.4
+
+x_vel_pen: 0.5
+x_vel_scale: 15.0
+
+y_angle_vel_pen: 0.0
+y_angle_vel_scale: 1.0``
+```
+
+The training progress was as follows:
+
+![tensorboard_output PPO_10deg_rand_force_6](./eval_logs/PPO_10deg_rand_force_6_tb.png)
+With this the influence of the curriculum learning can be observed. Initially the policy quickly
+reaches the optimal reward, which then gradually begins to decrease until it stays on more or less the
+same level in the end. The evaluation takes some time before it starts to survive consistently because
+the evaluation is not influenced by the current difficulty level.
+
+The resulting policy is robust against perturbations of up to 20 degrees initially (max. during training: 10) and
+a force perturbation of 100 Nm. There is a low amount of oscillation present, as can be seen from the
+following graphs:
+
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_pos.png)
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_act.png)
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_pen.png)
 
