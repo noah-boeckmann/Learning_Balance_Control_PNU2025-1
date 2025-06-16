@@ -146,16 +146,11 @@ $`
 #TODO
 
 
-We were able to train a basic policy for the robot with no height change and no other perturbations:
-[Basic Rigid Policy](trained_model/basic_rigid_policy.zip)
-![basic rigid policy](trained_models/basic_rigid_policy.png)
+### Basic training without perturbation
 
-$`
-\text{reward} = \text{alive\_bonus} - 0.1 * \text{y\_angle}^2 - 0.1 * \text{x\_angle}^2 - 
-0.5 * (\text{wheel\_speed\_l}^2 + \text{wheel\_speed\_r}^2) - 10 * \text{x\_dist}
-`$
+### Training with initial angle perturbation
 
-### Training with angle and force perturbation
+### Training with initial angle and force perturbation
 Through experimenting we achieved the following [configuration](./trained_models/PPO_10deg_rand_force_6.yaml).
 The reward function ignores the distance from zero (positioning is considered a higher level control problem) and y-angle velocity. Heavy emphasis is laid on the x speed to avoid big movements. The wheel speed penalty
 mitigates oscillations.
@@ -180,7 +175,7 @@ x_vel_pen: 0.5
 x_vel_scale: 15.0
 
 y_angle_vel_pen: 0.0
-y_angle_vel_scale: 1.0``
+y_angle_vel_scale: 1.0
 ```
 
 The training progress was as follows:
@@ -199,3 +194,11 @@ following graphs:
 ![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_act.png)
 ![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_pen.png)
 
+### SAC
+Training SAC on the environment has proven to be more difficult. The results were acceptable,
+however more refinement has to be carried out to mitigate quirks of the policy. SAC
+tends to send actions which are more at the extreme ends of the action space, thus introducing
+high torque spikes and "upset" behavior. A penalty for high action inputs could solve this
+problem, however time constraints did not allow for additional training iterations.
+
+![sac_actions.png](./README_figures/sac_action.png)
