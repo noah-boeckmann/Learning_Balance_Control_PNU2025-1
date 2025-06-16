@@ -177,7 +177,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         observation = self._get_obs()
         y_angle = observation[4]
         terminated = bool(abs(y_angle) > 30)
-        reward, reward_info = self._get_rew(observation, terminated)
+        reward, reward_info = self._get_rew(observation, action, terminated)
 
         info = reward_info
 
@@ -197,30 +197,37 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
     def set_max_angle(self, angle):
         self._max_angle = angle
 
-    def _get_rew(self, observation, terminated):
-        x, y = observation[0], observation[1]
-        y_angle = observation[4]
-        z_angle = observation[5]
+    def _get_rew(self, observation, action, terminated):
+        x, y = observation[0], observation[1]  # x and y positions
+        y_angle = observation[4]  # Angle around the y-axis
+        z_angle = observation[5]  # Angle around the z-axis
 
         # x speed and y angle speed sensors:
         x_vel = observation[8]  # Velocity in x-axis direction
         y_angle_vel = observation[9]  # Angular velocity around the y-axis
 
-        wheel_speed_l = observation[6]
-        wheel_speed_r = observation[7]
+        # wheel_speed_l = observation[6]  # Rotational speed of the left wheel
+        # wheel_speed_r = observation[7]  # Rotational speed of the right wheel
+
+        torque_wheel_l = action[4]  # Torque applied to the left wheel
+        torque_wheel_r = action[5]  # Torque applied to the right wheel
 
         bounded_dist = bounded_penalty(x, self._dist_scale)
         bounded_y_angle = bounded_penalty(y_angle, self._y_angle_scale)
-        bounded_wheel_l = bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
-        bounded_wheel_r = bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
+        # bounded_wheel_l = bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
+        # bounded_wheel_r = bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
+        bounded_wheel_torque_l = bounded_penalty(torque_wheel_l, self._wheel_speed_scale)
+        bounded_wheel_torque_r = bounded_penalty(torque_wheel_r, self._wheel_speed_scale)
         bounded_z_angle = bounded_penalty(z_angle,self._z_angle_scale)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
         bounded_x_vel = bounded_penalty(x_vel, self._x_vel_scale)
         bounded_y_angle_vel =  bounded_penalty(y_angle_vel, self._y_angle_vel_scale)
 
         dist_penalty = self._dist_pen * bounded_dist
         y_angle_penalty = self._y_angle_pen * bounded_y_angle
-        wheel_l_penalty = self._wheel_speed_pen * bounded_wheel_l
-        wheel_r_penalty = self._wheel_speed_pen * bounded_wheel_r
+        # wheel_l_penalty = self._wheel_speed_pen * bounded_wheel_l
+        # wheel_r_penalty = self._wheel_speed_pen * bounded_wheel_r
+        wheel_torque_l_penalty = self._wheel_speed_pen * bounded_wheel_torque_l
+        wheel_torque_r_penalty = self._wheel_speed_pen * bounded_wheel_torque_r
         z_angle_penalty = self._z_angle_pen * bounded_z_angle
         x_vel_penalty = self._x_vel_pen * bounded_x_vel
         y_angle_vel_penalty = self._y_angle_vel_pen * bounded_y_angle_vel
@@ -231,8 +238,10 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
                 alive_bonus
                 - dist_penalty
                 - y_angle_penalty
-                - wheel_l_penalty
-                - wheel_r_penalty
+                # - wheel_l_penalty
+                # - wheel_r_penalty
+                - wheel_torque_l_penalty
+                - wheel_torque_r_penalty
                 - z_angle_penalty
                 - y_angle_vel_penalty
                 - x_vel_penalty
@@ -243,18 +252,22 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "distance_penalty": -dist_penalty,
             "y_angle_penalty": -y_angle_penalty,
             "z_angle_penalty": -z_angle_penalty,
-            "wheel_l_penalty": -wheel_l_penalty,
-            "wheel_r_penalty": -wheel_r_penalty,
+            # "wheel_l_penalty": -wheel_l_penalty,
+            # "wheel_r_penalty": -wheel_r_penalty,
+            "wheel_l_penalty": -wheel_torque_l_penalty,
+            "wheel_r_penalty": -wheel_torque_r_penalty,
             "x_vel_penalty": -x_vel_penalty,
             "y_angle_vel_penalty": -y_angle_vel_penalty,
 
-            "bounded_dist": - bounded_dist,
-            "bounded_y_angle": - bounded_y_angle,
-            "bounded_wheel_l": - bounded_wheel_l,
-            "bounded_wheel_r": - bounded_wheel_r,
-            "bounded_z_angle": - bounded_z_angle,
-            "bounded_x_vel": - bounded_x_vel,
-            "bounded_y_angle_vel": - bounded_y_angle_vel,
+            "bounded_dist": -bounded_dist,
+            "bounded_y_angle": -bounded_y_angle,
+            # "bounded_wheel_l": -bounded_wheel_l,
+            # "bounded_wheel_r": -bounded_wheel_r,
+            "bounded_wheel_l": -bounded_wheel_torque_l,
+            "bounded_wheel_r": -bounded_wheel_torque_r,
+            "bounded_z_angle": -bounded_z_angle,
+            "bounded_x_vel": -bounded_x_vel,
+            "bounded_y_angle_vel": -bounded_y_angle_vel,
         }
 
         return reward, reward_info
