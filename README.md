@@ -7,8 +7,7 @@ at the Pusan National University, South Korea.
 1. Introduction
 2. Physics Simulation in MuJoCo
 3. Training
-4. Approach
-5. Achievements
+4. Achievements
 
 
 ## 1. Introduction
@@ -34,9 +33,9 @@ We want to replace the LQR controller used in the paper with a learned policy in
 
 
 We also draw upon standard tools and methods in reinforcement learning:
-- The **Gymnasium** framework, as introduced by Mark Towers et al., which provides a structured interface for building and interacting with RL environments.
-- The MuJoCo physics simulation 
-- A wide range of foundational deep RL methods, informed by OpenAI’s recommended collection of *Key Papers in Deep Reinforcement Learning*.
+- The [Gymnasium](https://arxiv.org/abs/2407.17032) framework, as introduced by Mark Towers et al., which provides a structured interface for building and interacting with RL environments.
+- The [MuJoCo](https://mujoco.readthedocs.io/en/stable/overview.html) physics simulation 
+- A wide range of foundational deep RL methods, informed by OpenAI’s recommended collection of [Key Papers in Deep Reinforcement Learning](https://spinningup.openai.com/en/latest/spinningup/keypapers.html).
 
 These provide a solid foundation upon which we build our learning environment, robot simulation, and training infrastructure.
 
@@ -58,10 +57,10 @@ To achieve our goals, we have outlined a structured four-phase plan:
 2. **Proof-of-Concept Controller ✅**  
    Train an initial policy to stabilize a simplified version of the robot in a fixed height configuration, similar to solving an inverted pendulum problem.
 
-3. **Dynamic Height Control ✅**  
+3. **Height Control ✅**  
    Extend the task by enabling dynamic height changes during operation. Retrain or fine-tune the policy to maintain balance while adapting the robot’s height, increasing the complexity and realism of the task.
 
-4. **Robustness to Perturbations ✅**  
+4. **Introduction of Perturbations ✅**  
    Introduce perturbations such as force application or random starting angles to simulate real-world noise. This will help generalize the policy and make it robust against a wider range of conditions.
 
 ---
@@ -156,8 +155,8 @@ We have implemented training for two algorithms: Stable Baselines3 [PPO](https:/
 
 The configuration of a training is stored in a YAML file which has to be provided as an
 argument when starting the training. Basic configuration files for [PPO](./training/basic_PPO.yaml) and [SAC](./training/basic_SAC.yaml) with all necessary
-entries are provided. In addition to that there is command line arguments to further
-configure the training process.
+entries are provided. In addition to that there is command line arguments to
+configure the training process further.
 
 The training can be parallelized. Each additional training environment (can be set
 with ``--num_envs n``) consumes around 230 MB of RAM.
@@ -188,7 +187,7 @@ $`
 \sigma(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}
 `$
 
-![curricullum learning](README_figures/curriculum_learning.jpg)
+![curriculum learning](README_figures/curriculum_learning.jpg)
 
 
 #### Reward Function
@@ -235,10 +234,9 @@ $`
 `$
 
 ---
-## 4. Approach
 
 ---
-## 5. Achievements
+## 4. Achievements
 #TODO
 
 
