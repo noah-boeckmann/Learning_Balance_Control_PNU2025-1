@@ -147,6 +147,10 @@ $`
 
 
 ### Basic training without perturbation
+Basic training without any perturbations (height change is still enabled) achieves good results
+with very little training. All evaluation episodes run to completion after only 100k steps.
+This keeps being the case even as the curriculum introduces different height levels.
+![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png)
 
 ### Training with initial angle perturbation
 
@@ -180,7 +184,7 @@ y_angle_vel_scale: 1.0
 
 The training progress was as follows:
 
-![tensorboard_output PPO_10deg_rand_force_6](./eval_logs/PPO_10deg_rand_force_6_tb.png)
+![tensorboard_output PPO_10deg_rand_force_6](./README_figures/PPO_10deg_rand_force_6_tb.png)
 With this the influence of the curriculum learning can be observed. Initially the policy quickly
 reaches the optimal reward, which then gradually begins to decrease until it stays on more or less the
 same level in the end. The evaluation takes some time before it starts to survive consistently because
@@ -190,9 +194,9 @@ The resulting policy is robust against perturbations of up to 20 degrees initial
 a force perturbation of 100 Nm. There is a low amount of oscillation present, as can be seen from the
 following graphs:
 
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_pos.png)
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_act.png)
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./eval_logs/PPO_10deg_rand_force_6_pen.png)
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pos.png)
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_act.png)
+![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png)
 
 ### SAC
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
