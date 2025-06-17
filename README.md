@@ -129,13 +129,13 @@ $`\dot\theta_\text{L/R wheel}`$, the robot's x-velocity $`\dot x`$ and y angular
 ### High level training
 We have implemented training for two algorithms: Stable Baselines3 [PPO](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html) and [SAC](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
-The configuration of a training is stored in a `.YAML` file which has to be provided as an
+The configuration of a training is stored in a ``.YAML`` file which has to be provided as an
 argument when starting the training. Basic configuration files for [PPO](./training/basic_PPO.yaml) and [SAC](./training/basic_SAC.yaml) with all necessary
-entries are provided. In addition to that there is command line arguments to
+entries are provided. In addition to that there are command line arguments to
 configure the training process further.
 
 The training can be parallelized. Each additional training environment (can be set
-with ``--num_envs n``) consumes around 230 MB of RAM.
+with ``--num_envs n``) consumes around 220 MB of RAM.
 
 A training can be started with a pretrained model to continue with different settings
 or perturbations (provide path to zip with ``--cont_train X``)
@@ -151,64 +151,54 @@ The general training process is as follows:
 
 
 #### Curriculum Learning
-The curriculum learning callback calculates a difficulty scalar $[0, 1]$ depending on
+[CurriculumCallback.py](CurriculumCallback.py) calculates a difficulty scalar $[0, 1]$ depending on
 the current training step progress $`x := \frac{n_{step}}{N_{step}}`$ and sets the
-difficulty in the environment(s). The difficulty function can be configured, the
-default is a sigmoid function $\sigma(x)$ which showed the best results during our trainings.
-We introduce two tuning parameters here:
-$g$ controls the slope or growth and $x_\text{offset}$ shifts horizontally.
+difficulty in the environment(s). The underlying difficulty function used can be configured, with the
+default being a sigmoid function
+
+$`\tilde\sigma_{g,x_\text{offest}}(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}\;,`$
+
+which showed the best results during our trainings.
+We introduced two tuning parameters here:
+$g$ controls the slope or _growth_ and $x_\text{offset}$ shifts horizontally.
 Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at the $y$-intercept.
 
-$`
-\sigma(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}
-`$
-
-![curriculum learning](README_figures/curriculum_learning.jpg)
+[//]: # (Some variations of the difficulty function:)
+![curriculum learning](README_figures/curriculum_learning.png)
 
 
 #### Reward Function
-At first we tried a simple reward function that uses the square of the measured sensor data 
-$(\cdot)^2$ (to make sure the result is positive and smooth) together with a corresponding 
-customizable penalizing factor $`\lambda_{(\cdot)}`$. 
-This was combined with a constant bonus $`c_\text{alive bonus}`$ if the robot is *alive*.
+At first we tried a very simple reward function that uses the square of the measured sensor data 
+(observation) ${o_i}^2$ (to make sure the result is positive and smooth) together with a 
+corresponding customizable penalizing factor $`\lambda_{i}`$. 
+This was combined with a constant bonus $`c_\text{alive}`$ if the robot is _alive_:
 
-#TODO war hier x wirklich linear?
+$`\text{reward} = c_\text{alive} - \sum_{i} \lambda_{i} \, {o_i}^2`$
 
-$`
-\text{reward} = c_\text{alive bonus} -
-\lambda_{\theta_y} {\theta_y}^2 -
-\lambda_{\theta_x} {\theta_x}^2 -
-\lambda_{\dot \theta_\text{wheel}}\left( {\dot\theta_\text{left wheel}}^2 + {\dot\theta_\text{right wheel}}^2 \right) -
-\lambda_{x} x^2
-`$
+and for our specific setup:
 
-But in an effort to bound the reward for more consistent training with SAC in particular,
-we introduced a function $f$ which makes use of the sigmoid function $\sigma(x)$ and bounds
-each of our measured sensor data between $[0,1]$
+$`\text{reward} = c_\text{alive} - \lambda_{x} x^2 - \lambda_{\theta_x} {\theta_x}^2 - \lambda_{\theta_y} {\theta_y}^2 - \lambda_{\dot \theta_\text{wheel}}\left( {\dot\theta_\text{L wheel}}^2 + {\dot\theta_\text{R wheel}}^2 \right)\, .`$
 
-$`
-\begin{align}
-f(x) &= 2 \, \sigma(s|x|) - 1 \\
-     &= \dfrac{2}{1 + e^{-s|x|}} - 1
-\end{align}
-`$
 
-where $`s`$ scales the "slope" of the function and is used to adjust to the common range of $`x`$.
+To encourage more consistent training, particularly when using SAC, we introduced a bounding function
 
-![bounding function](README_figures/bounding_function.jpg)
+$`f_s: \mathbb{R} \rightarrow [0, 1]`$
 
-When we then specify, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive\_bonus} \in [0, 1]`$, our reward
-is bounded above by $`1`$
+that bounds each of the raw sensor data between $[0, 1]$ using a scaled sigmoid.
 
-$`
-\text{reward} = c_\text{alive bonus} -
-\lambda_{\theta_y} f(\theta_y) -
-\lambda_{\theta_x} f(\theta_x) -
-\lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{left wheel}\bigr) +
-\lambda_{\dot \theta_\text{left wheel}} f\bigl(\dot\theta_\text{right wheel}\bigr) -
-\lambda_{x} f(x) \leq 1
-`$
+$`\begin{align} f_s(x) &= 2 \cdot \sigma\bigl(s|x|\bigr) - 1 \\ &= \dfrac{2}{1 + e^{-s|x|}} - 1 \end{align}`$
 
+where $`s>0`$ controls the slope or steepness of the curve.
+It is adjusted such that the gradients within the expected range of $`x`$ do not vanish.
+This function ensures that large outliers or unbounded values do not dominate the reward during learning.
+
+![bounding function](README_figures/bounding_function.png)
+
+So the reward becomes:
+
+$`\begin{align} \text{reward} &= c_\text{alive} - \sum_{i} \lambda_{i} \, f_{s_i}(o_i) \\ &= c_\text{alive} - \lambda_{x} f_{s_x}(x) - \lambda_{\theta_x} f_{s_{\theta_x}}(\theta_x) - \lambda_{\theta_y} f_{s_{\theta_y}}(\theta_y) - \lambda_{\dot \theta_\text{wheel}} f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{L wheel}\bigr) + \lambda_{\dot \theta_\text{wheel}} f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{R wheel}\bigr) \leq 1\, , \end{align}`$
+
+which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in [0, 1]`$.
 
 ---
 ## 4. Achievements
