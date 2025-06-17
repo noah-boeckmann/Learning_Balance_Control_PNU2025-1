@@ -86,7 +86,8 @@ Our observation function uses these actuators and a sensor detecting velocity an
 
 <figure>
     <img src="bot_model/bot_geometry.png"
-         alt="bot geometry" style="width: 100%; max-width: 300px;">
+         alt="bot geometry"
+         style="width: 100%; max-width: 400px;">
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
 </figure>
 <!-- ![bot geometry](bot_model/bot_geometry.png) -->
@@ -215,10 +216,13 @@ This function ensures that large outliers or unbounded values do not dominate th
 
 So the reward becomes (including more observations):
 
-$`\begin{equation} 
+$`\begin{equation}
+\begin{aligned}
 \text{reward} &= c_\text{alive} - \sum_{i} \lambda_{i} \, f_{s_i}(o_i) \\
-&= c_\text{alive} - \lambda_{x} f_{s_x}(x) - \lambda_{\theta_y} f_{s_{\theta_y}}(\theta_y) - \lambda_{\theta_z} f_{s_{\theta_z}}(\theta_z) - \lambda_{\dot \theta_\text{wheel}} \left[ f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{L wheel}\bigr) + f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{R wheel}\bigr) \right] \\
+& \begin{aligned} &= c_\text{alive} - \lambda_{x} f_{s_x}(x) - \lambda_{\dot x} f_{s_{\dot x}}(\dot x) - \lambda_{\theta_y} f_{s_{\theta_y}}(\theta_y) - \lambda_{\dot \theta_y} f_{s_{\dot \theta_y}}(\dot \theta_y) \\
+& \qquad\qquad\quad - \lambda_{\theta_z} f_{s_{\theta_z}}(\theta_z) - \lambda_{\dot \theta_\text{wheel}} \left[ f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{L wheel}\bigr) + f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{R wheel}\bigr) \right] \end{aligned} \\
 &\leq 1\, ,
+\end{aligned}
 \end{equation}`$
 
 which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in [0, 1]`$.
