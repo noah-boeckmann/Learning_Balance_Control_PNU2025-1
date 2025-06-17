@@ -9,6 +9,7 @@ at the Pusan National University, South Korea.
 3. Training
 4. Achievements
 
+&nbsp;
 
 ## 1. Introduction
 
@@ -63,7 +64,7 @@ To achieve our goals, we have outlined a structured four-phase plan:
 4. **Introduction of Perturbations ✅**  
    Introduce perturbations such as force application or random starting angles to simulate real-world noise. This will help generalize the policy and make it robust against a wider range of conditions.
 
----
+&nbsp;
 
 ## 2. Physics Simulation in MuJoCo
 We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. 
@@ -117,6 +118,8 @@ and setting the height by precomputing the appropriate angles of all hinges to a
 - [MuJoCo Overview and Architecture](https://mujoco.readthedocs.io/en/stable/overview.html)  
 - [MuJoCo GitHub Repository](https://github.com/google-deepmind/mujoco)  
 
+&nbsp;
+
 ## 3. Training
 The training is based on the [MuJoCo Environment](https://gymnasium.farama.org/environments/mujoco/) implemented by the gymnasium project. Our robot environment is adapted from the
 [MuJoCo Cartpole](https://gymnasium.farama.org/environments/mujoco/inverted_pendulum/) environment.
@@ -168,7 +171,7 @@ the current training step progress $`x := \frac{n_{step}}{N_{step}}`$ and sets t
 difficulty in the environment(s). The underlying difficulty function used can be configured, with the
 default being a sigmoid function
 
-$`\tilde\sigma_{g,x_\text{offest}}(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}\;,`$
+$`\begin{equation} \tilde\sigma_{g,x_\text{offest}}(x) = \dfrac{1}{1 + e^{-g(x + x_{\text{offset}})}}\;, \end{equation}`$
 
 which showed the best results during our trainings.
 We introduced two tuning parameters here:
@@ -188,23 +191,18 @@ At first we tried a very simple reward function that uses the square of the meas
 corresponding customizable penalizing factor $`\lambda_{i}`$. 
 This was combined with a constant bonus $`c_\text{alive}`$ if the robot is _alive_:
 
-$`\text{reward} = c_\text{alive} - \sum_{i} \lambda_{i} \, {o_i}^2`$
-
-and for our specific setup:
-
-$`\text{reward} = c_\text{alive} - \lambda_{x} x^2 - \lambda_{\theta_x} {\theta_x}^2 - \lambda_{\theta_y} {\theta_y}^2 - \lambda_{\dot \theta_\text{wheel}}\left( {\dot\theta_\text{L wheel}}^2 + {\dot\theta_\text{R wheel}}^2 \right)\, .`$
-
+$`\begin{align} \text{reward} & = c_\text{alive} - \sum_{i} \lambda_{i} \, {o_i}^2 \\ &= c_\text{alive} - \lambda_{x} x^2 - \lambda_{\theta_y} {\theta_y}^2 - \lambda_{\theta_z} {\theta_z}^2 - \lambda_{\dot \theta_\text{wheel}}\left( {\dot\theta_\text{L wheel}}^2 + {\dot\theta_\text{R wheel}}^2 \right)\, . \end{align}`$
 
 To encourage more consistent training, particularly when using SAC, we introduced a bounding function
 
-$`f_s: \mathbb{R} \rightarrow [0, 1]`$
+$`\begin{equation} f_s: \mathbb{R} \rightarrow [0, 1] \end{equation}`$
 
 that bounds each of the raw sensor data between $[0, 1]$ using a scaled sigmoid.
 
 $`\begin{align} f_s(x) &= 2 \cdot \sigma\bigl(s|x|\bigr) - 1 \\ &= \dfrac{2}{1 + e^{-s|x|}} - 1 \end{align}`$
 
 where $`s>0`$ controls the slope or steepness of the curve.
-It is adjusted such that the gradients within the expected range of $`x`$ do not vanish.
+It is adjusted such that the gradients for the expected range of $`x`$ do not vanish.
 This function ensures that large outliers or unbounded values do not dominate the reward during learning.
 
 <figure>
@@ -214,17 +212,21 @@ This function ensures that large outliers or unbounded values do not dominate th
 </figure>
 <!-- ![bounding function](README_figures/bounding_function.png) -->
 
-So the reward becomes:
+So the reward becomes (including more observations):
 
-$`\begin{align} \text{reward} &= c_\text{alive} - \sum_{i} \lambda_{i} \, f_{s_i}(o_i) \\ &= c_\text{alive} - \lambda_{x} f_{s_x}(x) - \lambda_{\theta_x} f_{s_{\theta_x}}(\theta_x) - \lambda_{\theta_y} f_{s_{\theta_y}}(\theta_y) - \lambda_{\dot \theta_\text{wheel}} f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{L wheel}\bigr) + \lambda_{\dot \theta_\text{wheel}} f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{R wheel}\bigr) \leq 1\, , \end{align}`$
+$`\begin{equation} 
+\text{reward} &= c_\text{alive} - \sum_{i} \lambda_{i} \, f_{s_i}(o_i) \\
+&= c_\text{alive} - \lambda_{x} f_{s_x}(x) - \lambda_{\theta_y} f_{s_{\theta_y}}(\theta_y) - \lambda_{\theta_z} f_{s_{\theta_z}}(\theta_z) - \lambda_{\dot \theta_\text{wheel}} \left[ f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{L wheel}\bigr) + f_{s_{\dot\theta_\text{wheel}}}\bigl(\dot\theta_\text{R wheel}\bigr) \right] \\
+&\leq 1\, ,
+\end{equation}`$
 
 which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in [0, 1]`$.
 
-
+&nbsp;
 
 ## 4. Achievements
 Through experimenting we achieved the following reward function setup:
-```
+```yaml
 # Reward setup
 healthy_reward: 1
 
@@ -237,7 +239,7 @@ z_angle_scale: 1.5
 dist_pen: 0.0
 dist_scale: 15.0
 
-wheel_speed_pen: 0.125
+wheel_speed_pen: 0.125  # per wheel!
 wheel_speed_scale: 0.4
 
 x_vel_pen: 0.5
@@ -252,7 +254,12 @@ The reward function ignores the distance from zero (positioning is considered a 
 Basic training without any perturbations (height change is still enabled) achieves good results
 with very little training. All evaluation episodes run to completion after only 100k steps.
 This keeps being the case even as the curriculum introduces different height levels.
-![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png)
+<figure>
+    <img src="./README_figures/ppo_no_perturbation_tb.png"
+         alt="ppo_no_perturbation">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png) -->
 
 ### Training with initial angle and force perturbation
 
