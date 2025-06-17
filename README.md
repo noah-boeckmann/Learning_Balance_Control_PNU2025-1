@@ -312,8 +312,8 @@ following graphs:
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
 however more refinement has to be carried out to mitigate quirks of the policy. SAC
 tends to send actions which are more at the extreme ends of the action space, thus introducing
-high torque spikes and "upset" behavior. A penalty for high action inputs could solve this
-problem, however time constraints did not allow for additional training iterations.
+high torque spikes and "upset" behavior. A penalty for high *action* inputs instead of wheel speed could solve this
+problem.  This idea was implemented, slightly lowering the oscillations, but the tuning and additional training to get rid of them completely wasn't completed in the time constraints.
 
 <figure>
     <img src="./README_figures/sac_action.png"
