@@ -34,10 +34,10 @@ We want to replace the LQR controller used in the paper with a learned policy in
 
 We also draw upon standard tools and methods in reinforcement learning:
 - The [Gymnasium](https://arxiv.org/abs/2407.17032) framework, as introduced by Mark Towers et al., which provides a structured interface for building and interacting with RL environments.
-- The [MuJoCo](https://mujoco.readthedocs.io/en/stable/overview.html) physics simulation 
+- The [MuJoCo](https://mujoco.readthedocs.io/en/stable/overview.html) (Multi-Joint dynamics with Contact) physics simulation 
 - A wide range of foundational deep RL methods, informed by OpenAI’s recommended collection of [Key Papers in Deep Reinforcement Learning](https://spinningup.openai.com/en/latest/spinningup/keypapers.html).
 
-These provide a solid foundation upon which we build our learning environment, robot simulation, and training infrastructure.
+These provide a solid foundation with which we build our learning environment, robot simulation, and training infrastructure.
 
 ### Project Goals
 
@@ -67,7 +67,7 @@ To achieve our goals, we have outlined a structured four-phase plan:
 
 ## 2. Physics Simulation in MuJoCo
 We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. 
-MuJoCo (Multi-Joint dynamics with Contact) is a high-performance physics engine designed for simulating articulated structures in contact-rich environments. It is widely used in robotics, reinforcement learning, and biomechanics due to its speed, accuracy, and modeling flexibility.
+MuJoCo is a high-performance physics engine designed for simulating articulated structures in contact-rich environments. It is widely used in robotics, reinforcement learning, and biomechanics due to its speed, accuracy, and modeling flexibility.
 
 ### Model Definition 
 
@@ -81,21 +81,23 @@ MuJoCo models are defined in **MJCF**, an XML-based format. Key components inclu
 
 We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
 of the papers pictures and Table I, and added the necessary links and two actuators for the wheel speeds. 
-Our observation function uses these actuators and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
+Our observation function uses these actuators states and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
 ![bot geometry](bot_model/bot_geometry.png)
 ![bot model](bot_model/bot_model.png)
 
 ### Challenges faced during model implementation
 
-When we first applied our model in simulation, we experienced multiple difficulties as the model bahaved very shaky and instable. 
+When we first applied our model in simulation, we experienced difficulties as the model's joints behaved shaky and our simulation showed to be numerically unstable depending on the starting conditions. 
 
-In the beginning, the wheels have been immersing into the floor plane of our model. 
-We figured out that this failure occurred because our wheels had a too low density and thereby too bad mechanical properties to transmit the forces on the floor. 
-In order design a model that is hard to stabilize, we tried to raise the center of gravity and by implementing different densities. 
+In the beginning, the wheels penetrated the floor plane of our model. 
+We figured out that this failure occurred because our wheels' density was set too low and thereby instabilities
+arose. To increase the accuracy of our model, the bodies densities are set to approximate the given masses of the original. 
 
-Also, allowing the variation of the heights of the robot and having a controller adjusting the angles between the legs led to a underdamped system, 
-with an oscillation sometimes even resulting in loss of contact to the floor. This issue was solved by usage of a stiff controller 
-and setting the height already during the reset.
+Also, to allow the variation of the height of the robot actors are placed on the respective main body hinges. These actors
+implement a controller holding the appropriate angular position for the set height. Changing the height at the start of
+each episode by simply setting a position for the actors turned out to be insufficient. The controller's behavior proved
+to be unstable in case of angles far from the default value. This issue was solved by usage of a critically damped controller
+and setting the height by precomputing the appropriate angles of all hinges to avoid violent motions at the start of a simulation.
 
 
 ### Further Reading
@@ -104,7 +106,6 @@ and setting the height already during the reset.
 - [MuJoCo Overview and Architecture](https://mujoco.readthedocs.io/en/stable/overview.html)  
 - [MuJoCo GitHub Repository](https://github.com/google-deepmind/mujoco)  
 
----
 ## 3. Training
 The training is based on the [MuJoCo Environment](https://gymnasium.farama.org/environments/mujoco/) implemented by the gymnasium project. Our robot environment is adapted from the
 [MuJoCo Cartpole](https://gymnasium.farama.org/environments/mujoco/inverted_pendulum/) environment.
@@ -114,7 +115,7 @@ The training is based on the [MuJoCo Environment](https://gymnasium.farama.org/e
 [//]: # (The environment takes cofiguration arguments for configuring the behavior such as changing the robots')
 [//]: # (height, maximum perturbation angles and forces, and other settings.)
 
-The environment implements configurable settings that are progressively scaled by the current difficulty 
+The environment implements configurable perturbations that are progressively scaled by the current difficulty 
 given by curriculum learning:
 - Uniformly random height upon reset
 - Uniformly random y-angle upon reset
@@ -164,7 +165,7 @@ $g$ controls the slope or _growth_ and $x_\text{offset}$ shifts horizontally.
 Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at the $y$-intercept.
 
 [//]: # (Some variations of the difficulty function:)
-![curriculum learning](README_figures/curriculum_learning.png)
+![curriculum learning](./README_figures/curriculum_learning.jpg)
 
 
 #### Reward Function
@@ -202,20 +203,7 @@ which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 
 
 ---
 ## 4. Achievements
-
-### Basic training without perturbation
-Basic training without any perturbations (height change is still enabled) achieves good results
-with very little training. All evaluation episodes run to completion after only 100k steps.
-This keeps being the case even as the curriculum introduces different height levels.
-![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png)
-
-### Training with initial angle perturbation
-
-### Training with initial angle and force perturbation
-Through experimenting we achieved the following [configuration](./trained_models/PPO_10deg_rand_force_6.yaml).
-The reward function ignores the distance from zero (positioning is considered a higher level control problem) and y-angle velocity. Heavy emphasis is laid on the x speed to avoid big movements. The wheel speed penalty
-mitigates oscillations.
-
+Through experimenting we achieved the following reward function setup:
 ```
 # Reward setup
 healthy_reward: 1
@@ -238,6 +226,16 @@ x_vel_scale: 15.0
 y_angle_vel_pen: 0.0
 y_angle_vel_scale: 1.0
 ```
+The reward function ignores the distance from zero (positioning is considered a higher level control problem) and y-angle velocity. Heavy emphasis is laid on the x speed to avoid big movements. The wheel speed penalty mitigates oscillations.
+
+### Basic training without perturbation
+Basic training without any perturbations (height change is still enabled) achieves good results
+with very little training. All evaluation episodes run to completion after only 100k steps.
+This keeps being the case even as the curriculum introduces different height levels.
+![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png)
+
+### Training with initial angle and force perturbation
+
 
 The training progress was as follows:
 
@@ -254,6 +252,8 @@ following graphs:
 ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pos.png)
 ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_act.png)
 ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png)
+
+### Training with a faster curriculum schedule and higher initial angles
 
 ### SAC
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
