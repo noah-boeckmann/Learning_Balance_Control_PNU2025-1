@@ -66,28 +66,10 @@ To achieve our goals, we have outlined a structured four-phase plan:
 ---
 
 ## 2. Physics Simulation in MuJoCo
-
+We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. 
 MuJoCo (Multi-Joint dynamics with Contact) is a high-performance physics engine designed for simulating articulated structures in contact-rich environments. It is widely used in robotics, reinforcement learning, and biomechanics due to its speed, accuracy, and modeling flexibility.
 
-> We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. The simulation incorporated randomized terrain, friction variation, and noisy joint feedback. Accurate contact modeling helped improve controller generalization from simulation to reality.
-
-
-### ⚙️ Core Simulation Principles
-
-#### Generalized Coordinates
-MuJoCo simulates systems using **generalized coordinates**, avoiding the over-constrained Cartesian formulations common in game engines. This allows for:
-- Precise joint modeling
-- Efficient recursive dynamics
-- Stable constraint enforcement
-
-#### Contact Dynamics via Convex Optimization
-Unlike spring-damper approximations, MuJoCo formulates contact forces as **convex optimization problems**, enabling:
-- Realistic friction modeling (Coulomb friction)
-- Stable contact resolution
-- Support for soft and hard contacts
-
-
-### 🧩 Model Definition 
+### Model Definition 
 
 MuJoCo models are defined in **MJCF**, an XML-based format. Key components include:
 
@@ -98,36 +80,29 @@ MuJoCo models are defined in **MJCF**, an XML-based format. Key components inclu
 - `<sensor>`: Enables measurement of forces, positions, velocities, etc.
 
 We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
-of the papers pictures and Table I:
-
+of the papers pictures and Table I, and added the necessary links and two actuators for the wheel speeds. 
+Our observation function uses these actuators and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
 ![bot geometry](bot_model/bot_geometry.png)
 ![bot model](bot_model/bot_model.png)
 
-### 🧪 Physics Engine Features
+### Challenges faced during model implementation
 
-- **Constraint Solver**: Solves equality and inequality constraints using Projected Gauss-Seidel or Conjugate Gradient methods  
-- **Friction Cones**: Supports pyramidal and elliptic cones for dry friction modeling  
-- **Soft Contacts**: Enables compliant (deformable) contact modeling for smoother behavior  
-- **Time Integration**: Euler and Runge-Kutta integrators available for flexible simulation fidelity  
-- **Inverse Dynamics**: Allows computation of required torques for a given motion trajectory, even under contact conditions
+When we first applied our model in simulation, we experienced multiple difficulties as the model bahaved very shaky and instable. 
 
+In the beginning, the wheels have been immersing into the floor plane of our model. 
+We figured out that this failure occurred because our wheels had a too low density and thereby too bad mechanical properties to transmit the forces on the floor. 
+In order design a model that is hard to stabilize, we tried to raise the center of gravity and by implementing different densities. 
 
-### 🤖 Application in Robot Learning
-
-MuJoCo is highly suited for reinforcement learning and control system prototyping because of:
-
-- **Deterministic simulation**: Guarantees repeatable rollouts for debugging and benchmarking  
-- **Efficient performance**: High-speed simulation suitable for parallel training setups  
-- **Precise dynamics**: Fine-grained control over physical parameters like joint range, damping, friction, and mass properties
+Also, allowing the variation of the heights of the robot and having a controller adjusting the angles between the legs led to a underdamped system, 
+with an oscillation sometimes even resulting in loss of contact to the floor. This issue was solved by usage of a stiff controller 
+and setting the height already during the reset.
 
 
-### 📚 Further Reading
+### Further Reading
 
 - [MuJoCo Modeling Documentation](https://mujoco.readthedocs.io/en/stable/modeling.html)  
 - [MuJoCo Overview and Architecture](https://mujoco.readthedocs.io/en/stable/overview.html)  
 - [MuJoCo GitHub Repository](https://github.com/google-deepmind/mujoco)  
-- [GitHub Markdown Syntax Guide](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
-
 
 ---
 ## 3. Training
@@ -234,12 +209,9 @@ $`
 \lambda_{x} f(x) \leq 1
 `$
 
----
 
 ---
 ## 4. Achievements
-#TODO
-
 
 ### Basic training without perturbation
 Basic training without any perturbations (height change is still enabled) achieves good results
