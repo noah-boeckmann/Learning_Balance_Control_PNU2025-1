@@ -1,18 +1,3 @@
-<link rel="stylesheet" type="text/css"
-    href="https://cdn.rawgit.com/dreampulse/computer-modern-web-font/master/fonts.css">
-<style>
-/* body {
-  font-family: "Computer Modern Serif", serif;
-} */
-body
-{
-    font-family: 'Helvetica', "Computer Modern Serif", 'Arial', sans-serif;
-    /* color: #444444; */
-    /* font-size: 9pt; */
-    /* background-color: #FAFAFA; */
-}
-</style>
-
 # Learning Balance Control PNU2025-1
 
 This is the project repository for our course "Artificial Intelligence in Robotics"
@@ -211,9 +196,8 @@ This function ensures that large outliers or unbounded values do not dominate th
 
 <figure>
     <img src="README_figures/bounding_function.png"
-         alt="Curriculum Learning: Some variations of the difficulty function using different parameters.">
-    <figcaption><p style="font-family: 'Computer Modern Serif', serif;">This text uses Times New Roman.</p> 
-Some variations of the bounding function using different *s*.</figcaption>
+         alt="Bounding Function: Some variations of the bounding function using different s.">
+    <figcaption>Some variations of the bounding function using different <em>s</em>.</figcaption>
 </figure>
 <!-- ![bounding function](README_figures/bounding_function.png) -->
 
