@@ -15,29 +15,27 @@ at the Pusan National University, South Korea.
 
 Wheel-legged robots are a promising class of mobile robotic systems that combine the energy efficiency of wheels with the terrain adaptability of legs. This hybrid design makes them well-suited for unstructured or dynamic environments, such as exploration and delivery, where both mobility and stability are essential.
 
-However, designing control strategies for such systems is complex. Their inherently unstable structure, especially during standing or posture adjustments, presents challenges such as:
+However, designing control strategies for such systems can be complex. Their inherently unstable structure presents challenges such as:
 
-- Nonlinear dynamics from wheel-leg interactions  
-- Upright instability resembling the inverted pendulum problem  
-- Sensitivity to perturbations like shifts in the center of gravity or terrain changes  
+- Upright instability resembling the inverted pendulum problem which is non-linear in nature
+- Sensitivity to perturbations like external forces and terrain changes  
 - Varying kinematics during height adjustments  
 
-Traditional control approaches like PID or LQR require accurate system models, which are difficult to derive and often lack robustness in uncertain real-world scenarios.
+Traditional control approaches require accurate system models, which are difficult to derive and often lack robustness in uncertain real-world scenarios.
 
-### Motivation and Idea
+### Idea
 
 In this project, we propose a learning-based control approach using reinforcement learning (RL) to tackle the balance control problem of a wheel-legged robot. Rather than hand-designing controllers based on mathematical models, we aim to train a policy that learns to stabilize the robot in an upright position through interaction with a simulated environment.
-
-The idea is to frame the problem as a control task in a physics-based simulation environment and let the agent learn an optimal policy through trial and error. By using a deep reinforcement learning framework like Gymnasium, we can define a reward function that encourages the robot to remain balanced, penalize falls or unstable configurations, and eventually enable more advanced behaviors.
 
 ### Foundations and Related Work
 
 Our work builds directly on the research by S. Wang et al. in the paper *“[Balance Control of a Novel Wheel-legged Robot: Design and Experiments](https://ieeexplore.ieee.org/document/9561579)”*, where they present a physical prototype of a wheel-legged robot and evaluate both linear and nonlinear controllers for stabilization. 
-We want to replace the LQR controller used in the paper in order to keeping the robot upright with a learned policy.
+We want to replace the LQR controller used in the paper with a learned policy in order to keep the robot upright.
 
 
 We also draw upon standard tools and methods in reinforcement learning:
 - The **Gymnasium** framework, as introduced by Mark Towers et al., which provides a structured interface for building and interacting with RL environments.
+- The MuJoCo physics simulation 
 - A wide range of foundational deep RL methods, informed by OpenAI’s recommended collection of *Key Papers in Deep Reinforcement Learning*.
 
 These provide a solid foundation upon which we build our learning environment, robot simulation, and training infrastructure.
@@ -47,8 +45,7 @@ These provide a solid foundation upon which we build our learning environment, r
 Our primary goal is to train a learned controller that can balance the wheel-legged robot in a standing equilibrium state without relying on a predefined analytical model.
 
 A secondary objective is to increase the controller’s robustness by:
-- Allowing for **dynamic height changes**, simulating real-world adjustments in robot posture
-- Introducing **uncertainties in the robot’s center of gravity**, reflecting unpredictable or shifting payloads
+- Allowing for **height changes**, simulating real-world adjustments in robot posture
 - Gradually exposing the agent to **external perturbations** during training to improve generalization
 
 ### Research Plan
@@ -56,16 +53,16 @@ A secondary objective is to increase the controller’s robustness by:
 To achieve our goals, we have outlined a structured four-phase plan:
 
 1. **Simulation and Environment Setup ✅**  
-   Set up a physics simulation using PyBullet or Gazebo, and integrate it with Gymnasium. Develop a custom environment that includes state observation, action space definition, and a reward function based on balance criteria.
+   Set up a model of the robot in a physics simulation. Develop a custom environment that includes state observation, action space definition, and a reward function based on balance criteria.
 
 2. **Proof-of-Concept Controller ✅**  
-   Define the robot’s geometry and dynamics as described in the referenced paper. Train an initial policy to stabilize a simplified version of the robot in a fixed height configuration, similar to solving an inverted pendulum problem.
+   Train an initial policy to stabilize a simplified version of the robot in a fixed height configuration, similar to solving an inverted pendulum problem.
 
 3. **Dynamic Height Control ✅**  
    Extend the task by enabling dynamic height changes during operation. Retrain or fine-tune the policy to maintain balance while adapting the robot’s height, increasing the complexity and realism of the task.
 
 4. **Robustness to Perturbations ✅**  
-   Introduce mild randomization of physical parameters such as the center of gravity and add perturbations to simulate real-world noise. This will help generalize the policy and make it robust against a wider range of conditions.
+   Introduce perturbations such as force application or random starting angles to simulate real-world noise. This will help generalize the policy and make it robust against a wider range of conditions.
 
 ---
 
@@ -144,7 +141,7 @@ height, maximum perturbation angles and forces, and other settings.
 
 The environment implements the possibility to introduce the following perturbations
 during training which are scaled by the current difficulty level to enable curriculum learning:
-- Random height 
+- Random height upon reset
 - Random y-angle upon reset
 - Application of a force within a configurable time step window
 
