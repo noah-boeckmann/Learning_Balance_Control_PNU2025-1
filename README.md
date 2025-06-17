@@ -81,9 +81,20 @@ MuJoCo models are defined in **MJCF**, an XML-based format. Key components inclu
 
 We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
 of the papers pictures and Table I, and added the necessary links and two actuators for the wheel speeds. 
-Our observation function uses these actuators states and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
-![bot geometry](bot_model/bot_geometry.png)
-![bot model](bot_model/bot_model.png)
+Our observation function uses these actuators and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
+<figure>
+    <img src="bot_model/bot_geometry.png"
+         alt="bot geometry">
+    <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
+</figure>
+<!-- ![bot geometry](bot_model/bot_geometry.png) -->
+
+<figure>
+    <img src="bot_model/bot_model.png"
+         alt="bot model">
+    <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
+</figure>
+<!-- ![bot model](bot_model/bot_model.png) -->
 
 ### Challenges faced during model implementation
 
@@ -115,7 +126,7 @@ The training is based on the [MuJoCo Environment](https://gymnasium.farama.org/e
 [//]: # (The environment takes cofiguration arguments for configuring the behavior such as changing the robots')
 [//]: # (height, maximum perturbation angles and forces, and other settings.)
 
-The environment implements configurable perturbations that are progressively scaled by the current difficulty 
+The environment implements configurable settings that are progressively scaled by the current difficulty 
 given by curriculum learning:
 - Uniformly random height upon reset
 - Uniformly random y-angle upon reset
@@ -165,10 +176,11 @@ $g$ controls the slope or _growth_ and $x_\text{offset}$ shifts horizontally.
 Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at the $y$-intercept.
 
 <figure>
-    <img src="README_figures/curriculum_learning.png"
+    <img src="./README_figures/curriculum_learning.png"
          alt="Curriculum Learning: Some variations of the difficulty function using different parameters.">
-    <figcaption>Some variations of the difficulty function using different parameters.</figcaption>
+    <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
 </figure>
+<!-- ![curriculum learning](README_figures/curriculum_learning.png) -->
 
 #### Reward Function
 At first we tried a very simple reward function that uses the square of the measured sensor data 
@@ -196,9 +208,9 @@ It is adjusted such that the gradients within the expected range of $`x`$ do not
 This function ensures that large outliers or unbounded values do not dominate the reward during learning.
 
 <figure>
-    <img src="README_figures/bounding_function.png"
+    <img src="./README_figures/bounding_function.png"
          alt="Bounding Function: Some variations of the bounding function using different s.">
-    <figcaption>Some variations of the bounding function using different <em>s</em>.</figcaption>
+    <!-- <figcaption>Some variations of the bounding function using different <em>s</em>.</figcaption> -->
 </figure>
 <!-- ![bounding function](README_figures/bounding_function.png) -->
 
@@ -208,7 +220,8 @@ $`\begin{align} \text{reward} &= c_\text{alive} - \sum_{i} \lambda_{i} \, f_{s_i
 
 which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in [0, 1]`$.
 
----
+
+
 ## 4. Achievements
 Through experimenting we achieved the following reward function setup:
 ```
@@ -246,7 +259,13 @@ This keeps being the case even as the curriculum introduces different height lev
 
 The training progress was as follows:
 
-![tensorboard_output PPO_10deg_rand_force_6](./README_figures/PPO_10deg_rand_force_6_tb.png)
+<figure>
+    <img src="./README_figures/PPO_10deg_rand_force_6_tb.png"
+         alt="tensorboard_output PPO_10deg_rand_force_6">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![tensorboard_output PPO_10deg_rand_force_6](./README_figures/PPO_10deg_rand_force_6_tb.png) -->
+
 With this the influence of the curriculum learning can be observed. Initially the policy quickly
 reaches the optimal reward, which then gradually begins to decrease until it stays on more or less the
 same level in the end. The evaluation takes some time before it starts to survive consistently because
@@ -256,11 +275,26 @@ The resulting policy is robust against perturbations of up to 20 degrees initial
 a force perturbation of 100 Nm. There is a low amount of oscillation present, as can be seen from the
 following graphs:
 
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pos.png)
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_act.png)
-![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png)
+<figure>
+    <img src="./README_figures/PPO_10deg_rand_force_6_pos.png"
+         alt="eval_logs/PPO_10deg_rand_force_6_pos.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pos.png) -->
 
-### Training with a faster curriculum schedule and higher initial angles
+<figure>
+    <img src="./README_figures/PPO_10deg_rand_force_6_act.png"
+         alt="eval_logs/PPO_10deg_rand_force_6_pos.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_act.png) -->
+
+<figure>
+    <img src="./README_figures/PPO_10deg_rand_force_6_pen.png"
+         alt="eval_logs/PPO_10deg_rand_force_6_pos.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png) -->
 
 ### SAC
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
@@ -269,4 +303,9 @@ tends to send actions which are more at the extreme ends of the action space, th
 high torque spikes and "upset" behavior. A penalty for high action inputs could solve this
 problem, however time constraints did not allow for additional training iterations.
 
-![sac_actions.png](./README_figures/sac_action.png)
+<figure>
+    <img src="./README_figures/sac_action.png"
+         alt="sac_actions.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+<!-- ![sac_actions.png](./README_figures/sac_action.png) -->
