@@ -1,3 +1,18 @@
+<link rel="stylesheet" type="text/css"
+    href="https://cdn.rawgit.com/dreampulse/computer-modern-web-font/master/fonts.css">
+<style>
+/* body {
+  font-family: "Computer Modern Serif", serif;
+} */
+body
+{
+    font-family: 'Helvetica', "Computer Modern Serif", 'Arial', sans-serif;
+    /* color: #444444; */
+    /* font-size: 9pt; */
+    /* background-color: #FAFAFA; */
+}
+</style>
+
 # Learning Balance Control PNU2025-1
 
 This is the project repository for our course "Artificial Intelligence in Robotics"
@@ -163,9 +178,11 @@ We introduced two tuning parameters here:
 $g$ controls the slope or _growth_ and $x_\text{offset}$ shifts horizontally.
 Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at the $y$-intercept.
 
-[//]: # (Some variations of the difficulty function:)
-![curriculum learning](README_figures/curriculum_learning.png)
-
+<figure>
+    <img src="README_figures/curriculum_learning.png"
+         alt="Curriculum Learning: Some variations of the difficulty function using different parameters.">
+    <figcaption>Some variations of the difficulty function using different parameters.</figcaption>
+</figure>
 
 #### Reward Function
 At first we tried a very simple reward function that uses the square of the measured sensor data 
@@ -192,7 +209,13 @@ where $`s>0`$ controls the slope or steepness of the curve.
 It is adjusted such that the gradients within the expected range of $`x`$ do not vanish.
 This function ensures that large outliers or unbounded values do not dominate the reward during learning.
 
-![bounding function](README_figures/bounding_function.png)
+<figure>
+    <img src="README_figures/bounding_function.png"
+         alt="Curriculum Learning: Some variations of the difficulty function using different parameters.">
+    <figcaption><p style="font-family: 'Computer Modern Serif', serif;">This text uses Times New Roman.</p> 
+Some variations of the bounding function using different *s*.</figcaption>
+</figure>
+<!-- ![bounding function](README_figures/bounding_function.png) -->
 
 So the reward becomes:
 
