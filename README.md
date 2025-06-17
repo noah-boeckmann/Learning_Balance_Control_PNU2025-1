@@ -82,9 +82,10 @@ MuJoCo models are defined in **MJCF**, an XML-based format. Key components inclu
 We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
 of the papers pictures and Table I, and added the necessary links and two actuators for the wheel speeds. 
 Our observation function uses these actuators and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
+
 <figure>
     <img src="bot_model/bot_geometry.png"
-         alt="bot geometry">
+         alt="bot geometry" style="width: 100%; max-width: 300px;">
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
 </figure>
 <!-- ![bot geometry](bot_model/bot_geometry.png) -->
