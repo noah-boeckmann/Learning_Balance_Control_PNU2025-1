@@ -135,25 +135,26 @@ The training is based on the [MuJoCo Environment](https://gymnasium.farama.org/e
 [MuJoCo Cartpole](https://gymnasium.farama.org/environments/mujoco/inverted_pendulum/) environment.
 
 ### Environment
-The environment takes arguments for configuring the behavior such as changing the robots'
-height, maximum perturbation angles and forces, and other settings.
 
-The environment implements the possibility to introduce the following perturbations
-during training which are scaled by the current difficulty level to enable curriculum learning:
-- Random height upon reset
-- Random y-angle upon reset
-- Application of a force within a configurable time step window
+[//]: # (The environment takes cofiguration arguments for configuring the behavior such as changing the robots')
+[//]: # (height, maximum perturbation angles and forces, and other settings.)
 
-The action space is a 2-dimensional action in $[-10, 10]$ where each value represents
-the torque applied by the wheels' actuator.
+The environment implements configurable settings that are progressively scaled by the current difficulty 
+given by curriculum learning:
+- Uniformly random height upon reset
+- Uniformly random y-angle upon reset
+- Force application $`\mathcal{U}\{-F, 0, F\}`$ within a configurable time window
 
-The observation space is the bots position and rotation, the rotational speed of the wheels,
-the robots x-velocity and y-angular-velocity.
+The action space $`\mathcal{A} = [-10, 10]^2 \in \mathbb{R}^2`$ where each value represents
+the torque applied to each wheels' actuator.
+
+The observation space collects the bots position $\vec x$ and rotation $\vec \theta$, the rotational wheel speed 
+$`\dot\theta_\text{L/R wheel}`$, the robot's x-velocity $`\dot x`$ and y angular velocity $`\dot \theta_y`$.
 
 ### High level training
 We have implemented training for two algorithms: Stable Baselines3 [PPO](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html) and [SAC](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
-The configuration of a training is stored in a YAML file which has to be provided as an
+The configuration of a training is stored in a `.YAML` file which has to be provided as an
 argument when starting the training. Basic configuration files for [PPO](./training/basic_PPO.yaml) and [SAC](./training/basic_SAC.yaml) with all necessary
 entries are provided. In addition to that there is command line arguments to
 configure the training process further.
