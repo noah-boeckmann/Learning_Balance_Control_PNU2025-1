@@ -13,15 +13,16 @@ at the Pusan National University, South Korea.
 
 ## 1. Introduction
 
-Wheel-legged robots represent a novel and promising class of mobile robotic systems that aim to combine the best of both worlds: the energy-efficient locomotion of wheeled robots with the terrain adaptability and versatility of legged robots. This hybrid design makes them particularly suitable for applications in unstructured or dynamic environments — such as search and rescue missions, exploration, or delivery tasks — where both speed and stability are required.
+Wheel-legged robots are a promising class of mobile robotic systems that combine the energy efficiency of wheels with the terrain adaptability of legs. This hybrid design makes them well-suited for unstructured or dynamic environments, such as exploration and delivery, where both mobility and stability are essential.
 
-However, designing control strategies for such systems is highly non-trivial. The robot’s inherently unstable structure, especially when standing still or adjusting its posture, presents significant control challenges. These include:
-- **Nonlinear dynamics** due to the interaction between wheels and legs
-- **Instability** in the upright position, resembling the classical inverted pendulum problem
-- **Sensitivity to perturbations**, such as shifts in the center of gravity or sudden changes in terrain
-- **Changing kinematics** when altering the robot’s height or configuration
+However, designing control strategies for such systems is complex. Their inherently unstable structure, especially during standing or posture adjustments, presents challenges such as:
 
-Traditional control methods such as PID or LQ regulators rely heavily on accurate modeling of the system dynamics. However, deriving such models for complex, hybrid systems like wheel-legged robots is tedious, time-consuming, and often fails to generalize well in real-world conditions with uncertainties and disturbances. 
+- Nonlinear dynamics from wheel-leg interactions  
+- Upright instability resembling the inverted pendulum problem  
+- Sensitivity to perturbations like shifts in the center of gravity or terrain changes  
+- Varying kinematics during height adjustments  
+
+Traditional control approaches like PID or LQR require accurate system models, which are difficult to derive and often lack robustness in uncertain real-world scenarios.
 
 ### Motivation and Idea
 
@@ -72,7 +73,7 @@ To achieve our goals, we have outlined a structured four-phase plan:
 
 MuJoCo (Multi-Joint dynamics with Contact) is a high-performance physics engine designed for simulating articulated structures in contact-rich environments. It is widely used in robotics, reinforcement learning, and biomechanics due to its speed, accuracy, and modeling flexibility.
 
-> We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. The simulation incorporated randomized terrain, friction variation, and noisy joint feedback. Accurate contact modeling helped improve controller generalization from simulation to reality (sim2real).
+> We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. The simulation incorporated randomized terrain, friction variation, and noisy joint feedback. Accurate contact modeling helped improve controller generalization from simulation to reality.
 
 
 ### ⚙️ Core Simulation Principles
@@ -90,7 +91,7 @@ Unlike spring-damper approximations, MuJoCo formulates contact forces as **conve
 - Support for soft and hard contacts
 
 
-### 🧩 Model Definition (MJCF)
+### 🧩 Model Definition 
 
 MuJoCo models are defined in **MJCF**, an XML-based format. Key components include:
 
@@ -100,6 +101,11 @@ MuJoCo models are defined in **MJCF**, an XML-based format. Key components inclu
 - `<actuator>`: Adds motors, muscles, or tendons
 - `<sensor>`: Enables measurement of forces, positions, velocities, etc.
 
+We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
+of the papers pictures and Table I:
+
+![bot geometry](bot_model/bot_geometry.png)
+![bot model](bot_model/bot_model.png)
 
 ### 🧪 Physics Engine Features
 
@@ -126,15 +132,6 @@ MuJoCo is highly suited for reinforcement learning and control system prototypin
 - [MuJoCo GitHub Repository](https://github.com/google-deepmind/mujoco)  
 - [GitHub Markdown Syntax Guide](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 
-
-
-We approximated the robot in the MuJoCo simulation environment by estimating the dimensions from one
-of the papers pictures and Table I:
-
-![bot geometry](bot_model/bot_geometry.png)
-![bot model](bot_model/bot_model.png)
-
-#TODO
 
 ---
 ## 3. Training
