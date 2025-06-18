@@ -315,6 +315,20 @@ following graphs:
 </figure>
 <!-- ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png) -->
 
+### Training with 25 degrees initial angle and force perturbation
+Around 25 degrees we meet the maximum angle from which the robot can recover. As can be seen, the maximum action is applied to recover and any more angle leads to overswing that crosses the 30 degree stop criterion.
+<figure>
+    <img src="./README_figures/PPO_25deg.png"
+         alt="sac_actions.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+
+<figure>
+    <img src="./README_figures/PPO_25deg_act.png"
+         alt="sac_actions.png">
+    <!-- <figcaption></figcaption> -->
+</figure>
+
 ### SAC
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
 however more refinement has to be carried out to mitigate quirks of the policy. SAC
