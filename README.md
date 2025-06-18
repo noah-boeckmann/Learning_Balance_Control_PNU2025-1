@@ -85,17 +85,22 @@ of the papers pictures and Table I, and added the necessary links and two actuat
 Our observation function uses these actuators and a sensor detecting velocity and angular velocity of the main body to measure the system performance.
 
 <figure>
+    <center>
     <img src="bot_model/bot_geometry.png"
          alt="bot geometry"
          style="width: 100%; max-width: 400px;">
+    </center>
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
 </figure>
 <!-- ![bot geometry](bot_model/bot_geometry.png) -->
 
 <figure>
+    <center>
     <img src="bot_model/bot_model.png"
-         alt="bot model">
+         alt="bot model"
+         style="width: 100%; max-width: 400px;">
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
+    </center>
 </figure>
 <!-- ![bot model](bot_model/bot_model.png) -->
 
@@ -266,7 +271,7 @@ This keeps being the case even as the curriculum introduces different height lev
 </figure>
 <!-- ![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png) -->
 
-### Training with initial angle and force perturbation
+### Training with 10 degrees initial angle and force perturbation
 
 
 The training progress was as follows:
