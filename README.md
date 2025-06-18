@@ -94,16 +94,6 @@ Our observation function uses these actuators and a sensor detecting velocity an
 </figure>
 <!-- ![bot geometry](bot_model/bot_geometry.png) -->
 
-<figure>
-    <center>
-    <img src="bot_model/bot_model.png"
-         alt="bot model"
-         style="width: 100%; max-width: 400px;">
-    <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
-    </center>
-</figure>
-<!-- ![bot model](bot_model/bot_model.png) -->
-
 ### Challenges faced during model implementation
 
 When we first applied our model in simulation, we experienced difficulties as the model's joints behaved shaky and our simulation showed to be numerically unstable depending on the starting conditions. 
@@ -117,6 +107,18 @@ implement a controller holding the appropriate angular position for the set heig
 each episode by simply setting a position for the actors turned out to be insufficient. The controller's behavior proved
 to be unstable in case of angles far from the default value. This issue was solved by usage of a critically damped controller
 and setting the height by precomputing the appropriate angles of all hinges to avoid violent motions at the start of a simulation.
+
+<figure>
+    <center>
+    <img src="bot_model/bot_model.png"
+         alt="bot model"
+         style="width: 100%; max-width: 400px;">
+    <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
+    </center>
+</figure>
+<!-- ![bot model](bot_model/bot_model.png) -->
+
+
 
 
 ### Further Reading
