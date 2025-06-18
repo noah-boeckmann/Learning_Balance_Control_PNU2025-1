@@ -1,6 +1,6 @@
 # Learning Balance Control PNU2025-1
 
-This is the project repository for our course "Artificial Intelligence in Robotics"
+This is the project repository for our Project in the course "Artificial Intelligence in Robotics"
 at the Pusan National University, South Korea.
 
 ## Content
@@ -8,6 +8,7 @@ at the Pusan National University, South Korea.
 2. Physics Simulation in MuJoCo
 3. Training
 4. Achievements
+
 
 &nbsp;
 
@@ -23,15 +24,16 @@ However, designing control strategies for such systems can be complex. Their inh
 
 Traditional control approaches require accurate system models, which are difficult to derive and often lack robustness in uncertain real-world scenarios.
 
+
 ### Idea
 
 In this project, we propose a learning-based control approach using reinforcement learning (RL) to tackle the balance control problem of a wheel-legged robot. Rather than hand-designing controllers based on mathematical models, we aim to train a policy that learns to stabilize the robot in an upright position through interaction with a simulated environment.
+
 
 ### Foundations and Related Work
 
 Our work builds directly on the research by S. Wang et al. in the paper *“[Balance Control of a Novel Wheel-legged Robot: Design and Experiments](https://ieeexplore.ieee.org/document/9561579)”*, where they present a physical prototype of a wheel-legged robot and evaluate both linear and nonlinear controllers for stabilization. 
 We want to replace the LQR controller used in the paper with a learned policy in order to keep the robot upright.
-
 
 We also draw upon standard tools and methods in reinforcement learning:
 - The [Gymnasium](https://arxiv.org/abs/2407.17032) framework, as introduced by Mark Towers et al., which provides a structured interface for building and interacting with RL environments.
@@ -40,6 +42,7 @@ We also draw upon standard tools and methods in reinforcement learning:
 
 These provide a solid foundation with which we build our learning environment, robot simulation, and training infrastructure.
 
+
 ### Project Goals
 
 Our primary goal is to train a learned controller that can balance the wheel-legged robot in a standing equilibrium state without relying on a predefined analytical model.
@@ -47,6 +50,7 @@ Our primary goal is to train a learned controller that can balance the wheel-leg
 A secondary objective is to increase the controller’s robustness by:
 - Allowing for **height changes**, simulating real-world adjustments in robot posture
 - Gradually exposing the agent to **external perturbations** during training to improve generalization
+
 
 ### Research Plan
 
@@ -64,9 +68,11 @@ To achieve our goals, we have outlined a structured four-phase plan:
 4. **Introduction of Perturbations ✅**  
    Introduce perturbations such as force application or random starting angles to simulate real-world noise. This will help generalize the policy and make it robust against a wider range of conditions.
 
+
 &nbsp;
 
 ## 2. Physics Simulation in MuJoCo
+
 We used MuJoCo to simulate a wheel-legged robot learning robust balance strategies. 
 MuJoCo is a high-performance physics engine designed for simulating articulated structures in contact-rich environments. It is widely used in robotics, reinforcement learning, and biomechanics due to its speed, accuracy, and modeling flexibility.
 
@@ -94,6 +100,7 @@ Our observation function uses these actuators and a sensor detecting velocity an
 </figure>
 <!-- ![bot geometry](bot_model/bot_geometry.png) -->
 
+
 ### Challenges faced during model implementation
 
 When we first applied our model in simulation, we experienced difficulties as the model's joints behaved shaky and our simulation showed to be numerically unstable depending on the starting conditions. 
@@ -110,7 +117,7 @@ and setting the height by precomputing the appropriate angles of all hinges to a
 
 <figure>
     <center>
-    <img src="bot_model/bot_model.png"
+    <img src="bot_model/bot_model.jpeg"
          alt="bot model"
          style="width: 100%; max-width: 400px;">
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
@@ -119,13 +126,12 @@ and setting the height by precomputing the appropriate angles of all hinges to a
 <!-- ![bot model](bot_model/bot_model.png) -->
 
 
-
-
 ### Further Reading
 
 - [MuJoCo Modeling Documentation](https://mujoco.readthedocs.io/en/stable/modeling.html)  
 - [MuJoCo Overview and Architecture](https://mujoco.readthedocs.io/en/stable/overview.html)  
 - [MuJoCo GitHub Repository](https://github.com/google-deepmind/mujoco)  
+
 
 &nbsp;
 
@@ -150,6 +156,7 @@ the torque applied to each wheels' actuator.
 The observation space collects the bots position $\vec x$ and rotation $\vec \theta$, the rotational wheel speed 
 $`\dot\theta_\text{L/R wheel}`$, the robot's x-velocity $`\dot x`$ and y angular velocity $`\dot \theta_y`$.
 
+
 ### High level training
 We have implemented training for two algorithms: Stable Baselines3 [PPO](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html) and [SAC](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html)
 
@@ -172,7 +179,6 @@ The general training process is as follows:
 4. Preparation of the policy to train (SAC: optional warmup of the replay buffers with a pretrained PPO policy)
 5. Training of the policy with checkpoints, curriculum calculation and evaluation
 6. Final evaluation and policy saving (same name as ``.YAML`` file)
-
 
 #### Curriculum Learning
 [CurriculumCallback.py](CurriculumCallback.py) calculates a difficulty scalar $`x := \frac{n_\text{step}}{N_\text{step}} \in [0, 1]`$ depending on
@@ -234,6 +240,7 @@ $`\begin{equation}
 
 which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in \{0, 1\}`$.
 
+
 &nbsp;
 
 ## 4. Achievements
@@ -260,7 +267,9 @@ x_vel_scale: 15.0
 y_angle_vel_pen: 0.0
 y_angle_vel_scale: 1.0
 ```
+
 The reward function ignores the distance from zero (positioning is considered a higher level control problem) and y-angle velocity. Heavy emphasis is laid on the x speed to avoid big movements. The wheel speed penalty mitigates oscillations.
+
 
 ### Basic training without perturbation
 Basic training without any perturbations (height change is still enabled) achieves good results
@@ -273,8 +282,8 @@ This keeps being the case even as the curriculum introduces different height lev
 </figure>
 <!-- ![ppo_no_perturbation](./README_figures/ppo_no_perturbation_tb.png) -->
 
-### Training with 10 degrees initial angle and force perturbation
 
+### Training with 10 degrees initial angle and force perturbation
 
 The training progress was as follows:
 
@@ -315,7 +324,9 @@ following graphs:
 </figure>
 <!-- ![eval_logs/PPO_10deg_rand_force_6_pos.png](./README_figures/PPO_10deg_rand_force_6_pen.png) -->
 
+
 ### Training with 25 degrees initial angle and force perturbation
+
 Around 25 degrees we meet the maximum angle from which the robot can recover. As can be seen, the maximum action is applied to recover and any more angle leads to overswing that crosses the 30 degree stop criterion.
 <figure>
     <img src="./README_figures/PPO_25deg.png"
@@ -329,12 +340,14 @@ Around 25 degrees we meet the maximum angle from which the robot can recover. As
     <!-- <figcaption></figcaption> -->
 </figure>
 
+
 ### SAC
+
 Training SAC on the environment has proven to be more difficult. The results were acceptable,
 however more refinement has to be carried out to mitigate quirks of the policy. SAC
 tends to send actions which are more at the extreme ends of the action space, thus introducing
 high torque spikes and "upset" behavior. A penalty for high *action* inputs instead of wheel speed could solve this
-problem.  This idea was implemented, slightly lowering the oscillations, but the tuning and additional training to get rid of them completely wasn't completed in the time constraints.
+problem.  This idea was implemented in a seperate branch, slightly lowering the oscillations, but the tuning and additional training to get rid of them completely wasn't completed in the time constraints.
 
 <figure>
     <img src="./README_figures/sac_action.png"
