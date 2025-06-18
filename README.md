@@ -175,8 +175,8 @@ The general training process is as follows:
 
 
 #### Curriculum Learning
-[CurriculumCallback.py](CurriculumCallback.py) calculates a difficulty scalar $[0, 1]$ depending on
-the current training step progress $`x := \frac{n_{step}}{N_{step}}`$ and sets the
+[CurriculumCallback.py](CurriculumCallback.py) calculates a difficulty scalar $`x := \frac{n_\text{step}}{N_\text{step}} \in [0, 1]`$ depending on
+the current training step progress and sets the
 difficulty in the environment(s). The underlying difficulty function used can be configured, with the
 default being a sigmoid function
 
@@ -232,7 +232,7 @@ $`\begin{equation}
 \end{aligned}
 \end{equation}`$
 
-which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in [0, 1]`$.
+which is bounded above by $`1`$ when we then require, that $`\sum_i \lambda_i = 1`$ and $`c_\text{alive} \in \{0, 1\}`$.
 
 &nbsp;
 
