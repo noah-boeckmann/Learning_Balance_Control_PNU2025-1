@@ -23,7 +23,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
 
 
     ## Action Space
-    The agent take a 1-element vector for actions.
+    The agent takes a 2-element vector for actions.
     The action space is a continuous `(action)` in `[-10, 10]`, where `action` represents the
     numerical torque applied to the robots wheels (with magnitude representing the amount of torque and
     sign representing the direction)
@@ -165,7 +165,7 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         if self._step_count == self._first_disturbance:
             # The force is applied in the middle of the main bots body. Scaled with the current difficulty.
             disturbance = self._max_disturbance * self._difficulty
-            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, disturbance]) if not self._eval else disturbance
+            self.data.xfrc_applied [1,0] = self.np_random.choice([-disturbance, 0, disturbance]) if not self._eval else disturbance
         if self._step_count == self._first_disturbance + self._duration_disturbance:
             # Stop applying the force
             self.data.xfrc_applied[1, 0] = 0.0
@@ -209,13 +209,21 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         wheel_speed_l = observation[6]
         wheel_speed_r = observation[7]
 
-        dist_penalty = self._dist_pen * bounded_penalty(x, self._dist_scale)
-        y_angle_penalty = self._y_angle_pen * bounded_penalty(y_angle, self._y_angle_scale)
-        wheel_l_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
-        wheel_r_penalty = self._wheel_speed_pen * bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
-        z_angle_penalty = self._z_angle_pen * bounded_penalty(z_angle, self._z_angle_scale)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
-        x_vel_penalty = self._x_vel_pen * bounded_penalty(x_vel, self._x_vel_scale)
-        y_angle_vel_penalty = self._y_angle_vel_pen * bounded_penalty(y_angle_vel, self._y_angle_vel_scale)
+        bounded_dist = bounded_penalty(x, self._dist_scale)
+        bounded_y_angle = bounded_penalty(y_angle, self._y_angle_scale)
+        bounded_wheel_l = bounded_penalty(wheel_speed_l, self._wheel_speed_scale)
+        bounded_wheel_r = bounded_penalty(wheel_speed_r, self._wheel_speed_scale)
+        bounded_z_angle = bounded_penalty(z_angle,self._z_angle_scale)  # FIXME: z is not measured in the world (reference) frame - no issue when upright but should be looked into
+        bounded_x_vel = bounded_penalty(x_vel, self._x_vel_scale)
+        bounded_y_angle_vel =  bounded_penalty(y_angle_vel, self._y_angle_vel_scale)
+
+        dist_penalty = self._dist_pen * bounded_dist
+        y_angle_penalty = self._y_angle_pen * bounded_y_angle
+        wheel_l_penalty = self._wheel_speed_pen * bounded_wheel_l
+        wheel_r_penalty = self._wheel_speed_pen * bounded_wheel_r
+        z_angle_penalty = self._z_angle_pen * bounded_z_angle
+        x_vel_penalty = self._x_vel_pen * bounded_x_vel
+        y_angle_vel_penalty = self._y_angle_vel_pen * bounded_y_angle_vel
 
         alive_bonus = self._healthy_reward * int(not terminated)
 
@@ -237,8 +245,16 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
             "z_angle_penalty": -z_angle_penalty,
             "wheel_l_penalty": -wheel_l_penalty,
             "wheel_r_penalty": -wheel_r_penalty,
-            "y_angle_vel_penalty": -y_angle_vel_penalty,
             "x_vel_penalty": -x_vel_penalty,
+            "y_angle_vel_penalty": -y_angle_vel_penalty,
+
+            "bounded_dist": - bounded_dist,
+            "bounded_y_angle": - bounded_y_angle,
+            "bounded_wheel_l": - bounded_wheel_l,
+            "bounded_wheel_r": - bounded_wheel_r,
+            "bounded_z_angle": - bounded_z_angle,
+            "bounded_x_vel": - bounded_x_vel,
+            "bounded_y_angle_vel": - bounded_y_angle_vel,
         }
 
         return reward, reward_info
@@ -254,14 +270,16 @@ class WheelBotEnv(MujocoEnv, utils.EzPickle):
         x_vel = self.data.sensordata[5]
         sensordata = [wheel_sp_l, wheel_sp_r, x_vel, y_angle_vel]
 
-        return np.concatenate([self.data.xpos[1],  # bot pos + angle + distance traveled by wheels
-                euler, sensordata])
+        # bot pos [0,1,2] + angle [4,5,6] + wheel speed [6,7] + x_vel, y_angle_vel [8,9]
+        return np.concatenate([self.data.xpos[1], euler, sensordata])
+
 
     def reset_model(self):
         self._step_count = 0
 
         if self._eval:
             angle = self._max_angle
+            self._first_disturbance = self._earliest_disturbance
 
         else:
             # generate a random starting angle

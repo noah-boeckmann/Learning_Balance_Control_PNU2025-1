@@ -5,6 +5,8 @@ import time
 
 import gymnasium as gym
 import yaml
+import numpy as np
+import pandas as pd
 
 import robot_gym
 from stable_baselines3 import PPO, SAC
@@ -16,11 +18,13 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Show a trained model")
 
     # Add hyperparameters you want to control from command line
-    parser.add_argument('train_file', type=str, help="Path to policy file, either YAML or zip with default values (10 deg, full height change")
+    parser.add_argument('train_file', type=str,
+                        help="Path to policy file, either YAML or zip with default values (10 deg, full height change")
     parser.add_argument('algo', type=str, choices=["PPO", "SAC"], help="Algorithm to evaluate")
-    parser.add_argument('--info', type=str, choices=["rew", "act", "obs", "all"], default="rew",
+    parser.add_argument('--info', type=str, choices=["none", "rew", "act", "obs", "all"], default="rew",
                         help="Which type of information to output to console")
     parser.add_argument('--length', type=int, default=512, help="Length per episode")
+    parser.add_argument('--deterministic', type=bool, default=False, help="Use deterministic environment")
     return parser.parse_args()
 
 
@@ -88,7 +92,7 @@ def main():
                             x_vel_scale=config['x_vel_scale'],
                             y_angle_vel_pen=config['y_angle_vel_pen'],
                             y_angle_vel_scale=config['y_angle_vel_scale'],
-                            eval = False,
+                            eval = args.deterministic,
                             rigid = config['rigid'],
                             max_angle = config['max_angle'],
                             height_level = config['height_level'],
@@ -113,13 +117,43 @@ def main():
         while True:
             obs = env.reset()
             rew = 0
+            logs = []
+
             for _ in range(100):
                 env.render()
                 time.sleep(0.01)
-            for _ in range(args.length):
+            for step in range(args.length):
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
-                rew += reward
+                rew += reward  # Accumulate reward over the episode
+
+                # Handle vectorized environments or non-scalar outputs
+                reward_scalar = reward[0] if isinstance(reward, (list, np.ndarray)) else reward
+                info_dict = info[0] if isinstance(info, list) else info
+                obs_array = obs[0] if isinstance(obs, np.ndarray) else obs
+                action_array = action[0] if isinstance(action, np.ndarray) else action
+
+                # log per-step data
+                row = {"step": step, "reward": reward_scalar,}
+                #row.update({f"obs_{i}": val for i, val in enumerate(obs_array)})  # no names = bad
+                row.update({
+                    "x": obs_array[0],              # x position
+                    "y": obs_array[1],              # y position
+                    "z": obs_array[2],              # z position (TODO: wirklich?)
+                    "x_angle": obs_array[3],        # angle around x-axis (TODO: wirklich?)
+                    "y_angle": obs_array[4],        # angle around y-axis
+                    "z_angle": obs_array[5],        # angle around z-axis
+                    "wheel_speed_l": obs_array[6],  # Left wheel rotational speed
+                    "wheel_speed_r": obs_array[7],  # Right wheel rotational speed
+                    "x_vel": obs_array[8],          # Linear velocity in x-direction
+                    "y_angle_vel": obs_array[9],    # Angular velocity around y-axis
+                })
+                row.update({f"action_{i}": val for i, val in enumerate(action_array)})  # TODO: name correctly; "wheel
+                # activation?"
+                # Individual rewards (already penalized with the penalty factor i [0,1])
+                row.update({k: float(v) if isinstance(v, np.generic) else v for k, v in info_dict.items()})
+
+                logs.append(row)
 
                 if args.info == "rew":
                     print("Reward: " + str(reward) + " | "+ str(info))
@@ -134,8 +168,12 @@ def main():
 
                 if done:
                     break
-
                 time.sleep(0.01)
+
+            # Save the logs of that episode (warning: overwrites old logs)
+            df = pd.DataFrame(logs)
+            df.to_csv("eval_logs/eval_log.csv", index=False)
+            print("Saved eval_log.csv with shape:", df.shape)
 
             print(rew)
             time.sleep(2)

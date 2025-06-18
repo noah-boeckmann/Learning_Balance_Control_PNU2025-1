@@ -7,7 +7,7 @@ n_steps: 1024
 max_ep_steps: 512
 frame_skip: 1
 
-total_timesteps: 10_000_000
+total_timesteps: 20_000_000
 save_interval: 1_000_000
 eval_freq: 500_000
 n_eval_ep: 100
@@ -18,23 +18,22 @@ learning_rate: 0.0003
 # Reward setup
 healthy_reward: 1
 
-y_angle_pen: 0.2
-y_angle_scale: 1.0
+y_angle_pen: 0.15
+y_angle_scale: 0.5
 
-z_angle_pen: 0.025
-z_angle_scale: 1.0
+z_angle_pen: 0.1
+z_angle_scale: 1.5
 
-dist_pen: 0.2
+dist_pen: 0.0
 dist_scale: 15.0
 
-#FIXME 0.1 PER WHEEL, not in total! So choose such that 2*wheel_speed_pen + <all other penalty factors> = 1
-wheel_speed_pen: 0.1
-wheel_speed_scale: 1.0
+wheel_speed_pen: 0.125
+wheel_speed_scale: 0.4
 
-x_vel_pen: 0.45
+x_vel_pen: 0.5
 x_vel_scale: 15.0
 
-y_angle_vel_pen: 0.025
+y_angle_vel_pen: 0.0
 y_angle_vel_scale: 1.0
 
 # Angle and height settings
@@ -43,10 +42,10 @@ rigid: False
 height_level: 1.0
 
 # Force perturbation settings
-first_disturbance: 100
-disturbance_window: 1.5
-duration_disturbance: 0
-max_disturbance: 0 # in N
+first_disturbance: 300
+duration_disturbance: 5
+disturbance_window: 1.3333
+max_disturbance: 100 # in N
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
 

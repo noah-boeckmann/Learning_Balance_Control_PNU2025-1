@@ -4,56 +4,55 @@ policy: MlpPolicy
 
 # Step settings
 n_steps: 1024
-max_ep_steps: 512
+max_ep_steps: 256
 frame_skip: 1
 
-total_timesteps: 10_000_000
-save_interval: 1_000_000
-eval_freq: 500_000
+total_timesteps: 8_000_000
+save_interval: 500_000
+eval_freq: 100_000
 n_eval_ep: 100
 
-learning_rate: 0.0003
+learning_rate: 0.00025
 
 
 # Reward setup
 healthy_reward: 1
 
-y_angle_pen: 0.2
-y_angle_scale: 1.0
+y_angle_pen: 0.45  # 0.15
+y_angle_scale: 0.2  # 1.0
 
-z_angle_pen: 0.025
-z_angle_scale: 1.0
+z_angle_pen: 0.05
+z_angle_scale: 3.0  # 1.0
 
-dist_pen: 0.2
-dist_scale: 15.0
+dist_pen: 0.25
+dist_scale: 100.0  # 15.0
 
-#FIXME 0.1 PER WHEEL, not in total! So choose such that 2*wheel_speed_pen + <all other penalty factors> = 1
-wheel_speed_pen: 0.1
-wheel_speed_scale: 1.0
+#FIXME: per wheel, not in total! So choose such that 2*wheel_speed_pen + <all other penalty factors> = 1
+wheel_speed_pen: 0.075  # 0.125
+wheel_speed_scale: 1.0  # 1.03
 
-x_vel_pen: 0.45
-x_vel_scale: 15.0
+x_vel_pen: 0.00  # 0.45
+x_vel_scale: 5.0
 
-y_angle_vel_pen: 0.025
+y_angle_vel_pen: 0.05
 y_angle_vel_scale: 1.0
 
 # Angle and height settings
-max_angle: 10.0
+max_angle: 30.0
 rigid: False
 height_level: 1.0
 
 # Force perturbation settings
-first_disturbance: 100
-disturbance_window: 1.5
+first_disturbance: 10000
+disturbance_window: 1.0
 duration_disturbance: 0
 max_disturbance: 0 # in N
 
 # Curriculum learning (x takes values in the range [0, 1], the output will be clamped to [0, 1]
-
 # difficulty_schedule: "lin"  # grad * (x + x_offset)
 # difficulty_schedule: "exp"  # exp(grad * x + x_offset)
 # difficulty_schedule: "cub"  # grad * (x + x_offset)^3
 difficulty_schedule: "sig"  # 1 / (1 + e^(-grad * (x + x_offset)))
-difficulty_grad: 9.0
-difficulty_x_offset: -0.35
+difficulty_grad: 5.5
+difficulty_x_offset: 0.0
 difficulty_start: 0.0
