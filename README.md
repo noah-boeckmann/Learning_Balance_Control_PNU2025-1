@@ -199,6 +199,10 @@ Since our step progress $x$ is $\in [0, 1]$, the starting difficulty will be at 
     <!-- <figcaption>Some variations of the difficulty function using different parameters.</figcaption> -->
 </figure>
 <!-- ![curriculum learning](README_figures/curriculum_learning.png) -->
+Play around with the difficulty function here:
+
+[Difficulty Function in Desmos Graphing Calculator](https://www.desmos.com/calculator/dndpspw6vm)
+
 
 #### Reward Function
 At first we tried a very simple reward function that uses the square of the measured sensor data 
@@ -226,6 +230,8 @@ This function ensures that large outliers or unbounded values do not dominate th
     <!-- <figcaption>Some variations of the bounding function using different <em>s</em>.</figcaption> -->
 </figure>
 <!-- ![bounding function](README_figures/bounding_function.png) -->
+
+Play around with the factors here: [Bounding Function in Desmos Graphing Calculator](https://www.desmos.com/calculator/zf7koq9a8r)
 
 So the reward becomes (including more observations):
 
