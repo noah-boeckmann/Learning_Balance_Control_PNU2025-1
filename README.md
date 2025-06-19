@@ -144,7 +144,7 @@ given by curriculum learning:
 - Uniformly random y-angle upon reset
 - Force application $`\mathcal{U}\{-F, 0, F\}`$ within a configurable time window
 
-The action space $`\mathcal{A} = [-10, 10]^2 \in \mathbb{R}^2`$ where each value represents
+The action space is $`\mathcal{A} = [-10, 10]^2 \in \mathbb{R}^2`$ where each value represents
 the torque applied to each wheels' actuator.
 
 The observation space collects the bots position $\vec x$ and rotation $\vec \theta$, the rotational wheel speed 
